@@ -1,5 +1,6 @@
+import { Admin } from '../../admin/entities/admin.entity';
 import { User } from '../../users/entities/user.entity';
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Exercises {
@@ -23,4 +24,6 @@ export class Exercises {
 
   @ManyToMany(() => User, (user) => user.exercises)
   users: User[];
+
+
 }

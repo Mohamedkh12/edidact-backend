@@ -5,10 +5,12 @@ import { Roles } from './entities/roles.entity';
 import { RolesService } from './roles.service';
 import { RolesController } from './roles.controller';
 
+
+
 @Module({
   imports: [TypeOrmModule.forFeature([Roles])],
   providers: [RolesGuard, RolesService],
-  exports: [RolesGuard],
+  exports: [RolesGuard, RolesService],
   controllers: [RolesController],
 })
 export class RolesModule {}
