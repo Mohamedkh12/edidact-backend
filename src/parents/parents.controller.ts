@@ -12,8 +12,8 @@ export class ParentsController {
     private readonly parentsService: ParentsService,
   ) {}
   @Public()
-  @Post("createChild/:parentId")
-  async createChild(@Param('parentId') parentId: number,@Body() createChildDto: CreateChildDto): Promise<Childs> {
-    return await this.parentsService.createChild(parentId,createChildDto)
+  @Post("createChild")
+  async createChild(@Body() createChildDto: CreateChildDto): Promise<Childs> {
+    return await this.parentsService.createChild(createChildDto)
   }
 }
