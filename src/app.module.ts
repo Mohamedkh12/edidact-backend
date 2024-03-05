@@ -29,6 +29,7 @@ import { Admin } from './admin/entities/admin.entity';
 import { AdminController } from './admin/admin.controller';
 import { APP_GUARD } from '@nestjs/core';
 import {  RolesGuard } from './roles/guards/rôles.guard';
+import { ExercisesService } from './exercises/exercises.service';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import {  RolesGuard } from './roles/guards/rôles.guard';
     RolesService,
     BackPackService,
     ChildsService,
+    ExercisesService,
     ParentsService, {
       provide: APP_GUARD,
       useClass: RolesGuard,
