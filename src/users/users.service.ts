@@ -20,7 +20,6 @@ export class UsersService {
   ) {}
   //create compte users
   async create(createUserDto: CreateUserDto) {
-    console.log("bonjour")
     const roleId = parseInt(createUserDto.roleId.toString(), 10);
 
     // Vérifiez si l'utilisateur existe déjà par son nom d'utilisateur
