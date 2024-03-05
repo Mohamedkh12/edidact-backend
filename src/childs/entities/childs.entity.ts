@@ -9,5 +9,5 @@ export class Childs extends User {
   id_parent: number;
   @ManyToOne(() => Parents, (parents) => parents.childs)
   @JoinColumn({ name: 'id_parent' })
-  parents: Parents;
+  parents: Parents
 }

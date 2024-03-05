@@ -6,6 +6,8 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../roles/entities/roles.entity';
+import { Childs } from '../childs/entities/childs.entity';
+import { CreateChildDto } from '../childs/dto/create-child';
 
 @Injectable()
 export class UsersService {
@@ -14,7 +16,9 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(Roles)
     private rolesRepository: Repository<Roles>,
+
   ) {}
+  //create compte users
   async create(createUserDto: CreateUserDto) {
     console.log("bonjour")
     const roleId = parseInt(createUserDto.roleId.toString(), 10);
@@ -49,10 +53,14 @@ console.log("newUser",newUser)
 console.log("savedUser",savedUser)
     return savedUser;
   }
+
+
+  //affichage users
   async findAll() {
     return await this.usersRepository.find();
   }
 
+  //afficher un user
   async findOne(idOrUsername: number | string): Promise<User | undefined> {
     if (typeof idOrUsername === 'number') {
       return this.usersRepository.findOne({ where: { id: idOrUsername } });
@@ -68,6 +76,7 @@ console.log("savedUser",savedUser)
   }
 
 
+  //update un user
   async update(id: number, updateUserDto: UpdateUserDto) {
     const user=await this.usersRepository.findOne({where :{id:id}})
     if(!user) throw new NotFoundException()
@@ -75,6 +84,7 @@ console.log("savedUser",savedUser)
     return this.usersRepository.save(user)
   }
 
+  //supprimer un user
   async remove(id: number) {
     const user=await this.usersRepository.findOne({where :{id:id}})
     if(!user) throw new NotFoundException()

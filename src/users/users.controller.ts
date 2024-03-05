@@ -16,6 +16,8 @@ import {Role} from '../roles/enums/role.enum';
 import { User } from './entities/user.entity';
 import { JwtAuthGuards } from '../auth/guards/jwt-auth.guards';
 import { Roles } from '../roles/decorators/roles.decorator';
+import { CreateChildDto } from '../childs/dto/create-child';
+import { Childs } from '../childs/entities/childs.entity';
 
 
 @Controller('users')
@@ -28,6 +30,8 @@ export class UsersController {
     console.log("creteuser",createUserDto)
     return this.usersService.create(createUserDto);
   }
+
+
   @Roles(Role.Parent, Role.Admin)
   @Get()
   findAll() {
@@ -45,6 +49,7 @@ export class UsersController {
   }
   @Delete(':id')
   @Roles(Role.Admin)
+  @UseGuards(RolesGuard,JwtAuthGuards)
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
