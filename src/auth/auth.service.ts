@@ -82,7 +82,7 @@ console.log("payload",payload)
       sub:user.id,
       role:user.roles
     };
-    const refreshToken = await this.jwtService.sign(payload, { expiresIn: '7d' });
+    const refreshToken =  this.jwtService.sign(payload, { expiresIn: '7d' });
     return {
       //Refresh token
       refreshToken: refreshToken,

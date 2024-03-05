@@ -4,10 +4,11 @@ import { ChildsService } from './childs.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Childs } from './entities/childs.entity';
 
+
 @Module({
   imports: [TypeOrmModule.forFeature([Childs])],
   controllers: [ChildsController],
   providers: [ChildsService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, ChildsService],
 })
 export class ChildsModule {}

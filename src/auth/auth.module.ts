@@ -13,10 +13,12 @@ import { JwtStrategy } from './strategy/jwt.strategy';
 import { LocalStrategy } from './strategy/local-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtAuthGuards } from './guards/jwt-auth.guards';
+import { ChildsService } from '../childs/childs.service';
+import { ChildsModule } from '../childs/childs.module';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), UsersModule, JwtModule.register({
+  imports: [TypeOrmModule.forFeature([User]), UsersModule, ChildsModule, JwtModule.register({
     global: true,
     secret: jwtConstants.secret,
     signOptions: { expiresIn: '60m' },
@@ -25,8 +27,8 @@ import { JwtAuthGuards } from './guards/jwt-auth.guards';
   providers: [AuthService, UsersService, {
     provide: APP_GUARD,
     useClass: AuthGuard,
-  }, JwtStrategy, LocalStrategy,JwtAuthGuards],
-  exports: [AuthService],
+  }, JwtStrategy, LocalStrategy,JwtAuthGuards,ChildsService],
+  exports: [AuthService,ChildsService],
 })
 export class AuthModule {}
 

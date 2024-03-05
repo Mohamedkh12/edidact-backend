@@ -7,10 +7,11 @@ import {ExercisesModule} from "../exercises/exercises.module";
 import { UsersService } from '../users/users.service';
 import { UsersModule } from '../users/users.module';
 import { ExercisesService } from '../exercises/exercises.service';
+import { ChildsModule } from '../childs/childs.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([Back_pack]),ExercisesModule,UsersModule],
+  imports: [TypeOrmModule.forFeature([Back_pack]),ExercisesModule,UsersModule,ChildsModule],
   controllers: [BackPackController],
   providers: [BackPackService,ExercisesService, UsersService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule,BackPackService,UsersService],
 })
 export class BackPackModule {}
