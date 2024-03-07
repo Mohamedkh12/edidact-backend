@@ -33,7 +33,7 @@ export class User {
   @Column()
   roleId: number;
 
-  @ManyToOne(() => Roles, (role) => role.users, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'roleId' })
   roles: Roles;
 

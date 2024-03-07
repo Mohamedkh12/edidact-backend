@@ -9,12 +9,14 @@ import { RolesModule } from '../roles/roles.module';
 import { ChildsModule } from '../childs/childs.module';
 import { ChildsService } from '../childs/childs.service';
 import { RolesService } from '../roles/roles.service';
+import { JwtStrategy } from '../auth/strategy/jwt.strategy';
+import { AuthService } from '../auth/auth.service';
 
 
 @Module({
   imports: [TypeOrmModule.forFeature([User,Roles]),RolesModule,ChildsModule],
-  exports: [TypeOrmModule,UsersService],
+  exports: [TypeOrmModule,UsersService,JwtStrategy],
   controllers: [UsersController],
-  providers: [UsersService,RolesGuard,ChildsService, RolesService],
+  providers: [UsersService,RolesGuard,ChildsService, RolesService,JwtStrategy,RolesGuard,AuthService],
 })
 export class UsersModule {}

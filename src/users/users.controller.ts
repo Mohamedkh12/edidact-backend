@@ -7,50 +7,66 @@ import {
   Param,
   Delete,
   UseGuards,
+  Headers,
+  UnauthorizedException,
+  UseInterceptors
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RolesGuard } from '../roles/guards/rôles.guard';
-import {Role} from '../roles/enums/role.enum';
+
 import { User } from './entities/user.entity';
-import { JwtAuthGuards } from '../auth/guards/jwt-auth.guards';
 import { Roles } from '../roles/decorators/roles.decorator';
-import { CreateChildDto } from '../childs/dto/create-child';
-import { Childs } from '../childs/entities/childs.entity';
+import { Public } from '../auth/decorators/public.decorator';
+import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
+import { AuthService } from '../auth/auth.service';
+import { jwtConstants } from '../auth/jwtConstants';
+import { CheckUserIdMiddleware } from '../auth/middleware/enregistreur.middleware';
+
 
 
 @Controller('users')
-@UseGuards(RolesGuard,JwtAuthGuards)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
+  constructor(private readonly usersService: UsersService,
+              private readonly authService: AuthService
+              ) {}
+@Public()
   @Post("create")
   create(@Body() createUserDto: CreateUserDto) {
-    console.log("creteuser",createUserDto)
+
     return this.usersService.create(createUserDto);
   }
+  @Roles("Parent", "Admin")
+  @UseGuards(JwtAuthGuards,RolesGuard)
   @Get()
-  @UseGuards(RolesGuard)
-  @Roles(Role.Parent, Role.Admin)
   findAll() {
     return this.usersService.findAll();
   }
+  @Roles("Parent", "Admin")
+  @UseGuards(JwtAuthGuards,RolesGuard)
   @Get(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.Parent, Role.Admin)
   findOne(@Param('id') id: number): Promise<User> {
     return this.usersService.findOne(id);
   }
-  @Patch(':id')
+  @Roles("Parent", "Admin")
+  @UseGuards(JwtAuthGuards)
   @UseGuards(RolesGuard)
-  @Roles(Role.Parent, Role.Admin)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
-    return this.usersService.update(+id, updateUserDto);
+  @Patch('update/:id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    try {
+      return this.usersService.update(+id, updateUserDto);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour :', error);
+      throw new UnauthorizedException('Erreur lors de la vérification de l\'utilisateur.');
+    }
   }
   @Delete(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.Admin)
+  @Roles("Admin")
+  @UseGuards(JwtAuthGuards,RolesGuard)
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }

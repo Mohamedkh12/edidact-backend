@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -30,6 +30,9 @@ import { AdminController } from './admin/admin.controller';
 import { APP_GUARD } from '@nestjs/core';
 import {  RolesGuard } from './roles/guards/rôles.guard';
 import { ExercisesService } from './exercises/exercises.service';
+import { PassportModule } from '@nestjs/passport';
+import { CheckUserIdMiddleware } from './auth/middleware/enregistreur.middleware';
+
 
 @Module({
   imports: [
@@ -51,6 +54,7 @@ import { ExercisesService } from './exercises/exercises.service';
     AdminModule,
     ParentsModule,
     ChildsModule,
+    PassportModule,
   ],
   controllers: [
     AppController,
@@ -67,10 +71,15 @@ import { ExercisesService } from './exercises/exercises.service';
     BackPackService,
     ChildsService,
     ExercisesService,
-    ParentsService, {
+    ParentsService,
+    {
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CheckUserIdMiddleware).forRoutes('users/update/:id');
+  }
+}
