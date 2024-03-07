@@ -7,25 +7,27 @@ import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { RolesGuard } from '../roles/guards/rôles.guard';
 
 @Controller('back-pack')
-@UseGuards(RolesGuard,JwtAuthGuards)
+
 export class BackPackController {
   constructor(private readonly backpackService: BackPackService) {}
 
+  @UseGuards(JwtAuthGuards,RolesGuard)
+  @Roles("Parent")
   @Post('addToBackpack')
- // @Roles(Role.Parent)
   async addToBackpack(@Request() req, @Body() createBackpackDto: CreateBackpackDto) {
     const { idExercises } = createBackpackDto;
     const { userId } = req.user;
     return this.backpackService.addToBackpack(userId, idExercises);
   }
+  @UseGuards(JwtAuthGuards,RolesGuard)
+  @Roles("Parent")
   @Delete(":idExercises")
-  //@Roles(Role.Parent)
   async deleteFromBackpack(@Param('idExercises') idExercises: number, @Request() req) {
     const { userId } = req.user;
     return this.backpackService.deleteFromBackpack(userId, idExercises);
   }
+  @UseGuards(JwtAuthGuards)
   @Get("getAllBackpack")
-  //@Roles(Role.Parent, Role.Child)
   async getAllBackpack() {
     return this.backpackService.findAll();
   }

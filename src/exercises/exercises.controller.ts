@@ -8,33 +8,40 @@ import { Role } from '../roles/enums/role.enum';
 
 
 @Controller('exercises')
-@UseGuards(JwtAuthGuards, RolesGuard)
+
 export class ExercisesController {
   constructor(private readonly exercisesService: ExercisesService) {}
 
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles("Parent", "Admin")
   @Get("getAllExercises")
-  //@Roles(Role.Parent, Role.Admin)
   async getAllExercises() {
     return this.exercisesService.getAllExercises();
   }
-  //@Roles(Role.Parent, Role.Admin)
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles("Parent", "Admin")
   @Get(':id')
   async getExerciseById(@Param('id') id: number) {
     return this.exercisesService.getExerciseById(id);
   }
 
- // @Roles(Role.Admin)
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles("Parent", "Admin")
   @Post("createExercise")
   async createExercise(@Body() createExerciseDto: CreateExerciseDto) {
     return this.exercisesService.createExercise(createExerciseDto);
   }
 
- //@Roles(Role.Admin)
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles("Admin")
   @Put(':id')
   async updateExercise(@Param('id') id: number, @Body() updateExerciseDto: CreateExerciseDto) {
     return this.exercisesService.updateExercise(id, updateExerciseDto);
   }
- //@Roles(Role.Admin)
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles("Admin")
   @Delete(':id')
   async deleteExercise(@Param('id') id: number) {
     return this.exercisesService.deleteExercise(id);
