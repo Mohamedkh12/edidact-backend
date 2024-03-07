@@ -27,7 +27,7 @@ export class ExercisesService {
 
   async createExercise(createExerciseDto: CreateExerciseDto): Promise<Exercises> {
     const exercise = this.exercisesRepository.create(createExerciseDto);
-    console.log(exercise);
+
     return await this.exercisesRepository.save(exercise);
   }
 

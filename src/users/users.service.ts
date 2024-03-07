@@ -1,13 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {  InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../roles/entities/roles.entity';
-import { Childs } from '../childs/entities/childs.entity';
-import { CreateChildDto } from '../childs/dto/create-child';
+
 
 @Injectable()
 export class UsersService {
@@ -26,7 +24,8 @@ export class UsersService {
     const existingUser = await this.usersRepository.findOne({
       where: { username: createUserDto.username },
     });
-console.log("existingUser",existingUser)
+
+
     if (existingUser) {
       throw new BadRequestException('Cet utilisateur existe déjà.');
     }
@@ -35,7 +34,7 @@ console.log("existingUser",existingUser)
     const role = await this.rolesRepository.findOne({
       where: { id: roleId },
     });
-console.log("role",role)
+
     if (!role) {
       throw new NotFoundException(`Rôle avec l'ID ${roleId} non trouvé`);
     }
@@ -46,10 +45,10 @@ console.log("role",role)
       roleId,
       roles: role,
     });
-console.log("newUser",newUser)
+
     // Enregistrez le nouvel utilisateur
     const savedUser = await this.usersRepository.save(newUser)
-console.log("savedUser",savedUser)
+
     return savedUser;
   }
 
@@ -62,6 +61,7 @@ console.log("savedUser",savedUser)
   //afficher un user
   async findOne(idOrUsername: number | string): Promise<User | undefined> {
     if (typeof idOrUsername === 'number') {
+
       return this.usersRepository.findOne({ where: { id: idOrUsername } });
     } else {
       return this.usersRepository.findOne({
@@ -86,6 +86,7 @@ console.log("savedUser",savedUser)
   //supprimer un user
   async remove(id: number) {
     const user=await this.usersRepository.findOne({where :{id:id}})
+
     if(!user) throw new NotFoundException()
     return this.usersRepository.remove(user)
   }

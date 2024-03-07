@@ -1,22 +1,63 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '../enums/role.enum';
+import * as jwt from 'jsonwebtoken';
+import { jwtConstants } from '../../auth/jwtConstants';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>('roles', [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    console.log("requiredRoles",requiredRoles)
-    if (!requiredRoles) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    if (!roles) {
       return true;
     }
-    const { user } = context.switchToHttp().getRequest();
-    console.log("user",user)
-    return requiredRoles.some((role) => user?.roles?.includes(role));
+
+    const request = context.switchToHttp().getRequest();
+    const token = this.extractTokenFromRequest(request);
+
+    if (!token) {
+      return false;
+    }
+
+    const user = await this.verifyToken(token, jwtConstants.secret);
+
+    if (!user || !user.roleName) {
+      return false;
+    }
+
+    const userRoles = Array.isArray(user.roleName) ? user.roleName : [user.roleName];
+
+    const requiredRoles = roles.map((role: any) => role);
+
+    const hasRequiredRole = requiredRoles.some((role: string) => userRoles.includes(role));
+
+    return hasRequiredRole;
+  }
+
+  private extractTokenFromRequest(request: any): string | null {
+    const authorizationHeader = request.headers['authorization'];
+
+    if (!authorizationHeader) {
+      return null;
+    }
+
+    const [, token] = authorizationHeader.split(' ');
+
+    return token || null;
+  }
+
+  private verifyToken(token: string, secretKey: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(decoded);
+        }
+      });
+    });
   }
 }

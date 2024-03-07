@@ -8,8 +8,10 @@ import { UsersService } from '../users/users.service';
 import { UsersModule } from '../users/users.module';
 import { ExercisesService } from '../exercises/exercises.service';
 import { ChildsModule } from '../childs/childs.module';
+import { RolesModule } from '../roles/roles.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([Back_pack]),ExercisesModule,UsersModule,ChildsModule],
+  imports: [TypeOrmModule.forFeature([Back_pack]),ExercisesModule,UsersModule,
+    ChildsModule,RolesModule],
   controllers: [BackPackController],
   providers: [BackPackService,ExercisesService, UsersService],
   exports: [TypeOrmModule,BackPackService,UsersService],
