@@ -25,8 +25,20 @@ export class ExercisesService {
     return exercise;
   }
 
+  async getExercisesByName(name: string): Promise<Exercises[]> {
+    return await this.exercisesRepository.find({ where: { name } });
+  }
+
   async createExercise(createExerciseDto: CreateExerciseDto): Promise<Exercises> {
-    const exercise = this.exercisesRepository.create(createExerciseDto);
+    const existingExercise = await this.exercisesRepository.findOne({
+      where: { name: createExerciseDto.name },
+    })
+
+    if (existingExercise) {
+      throw new NotFoundException('Exercise already exists');
+    }
+
+    const exercise =  this.exercisesRepository.create(createExerciseDto);
 
     return await this.exercisesRepository.save(exercise);
   }

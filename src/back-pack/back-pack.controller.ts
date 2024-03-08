@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { CreateBackpackDto } from './dto/create-backpack.dto';
 import { BackPackService } from './back-pack.service';
 import { Role } from '../roles/enums/role.enum';

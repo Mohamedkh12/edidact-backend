@@ -15,6 +15,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { ChildsService } from '../childs/childs.service';
 import { ChildsModule } from '../childs/childs.module';
+import { JwtRefreshTokenStrategy } from './strategy/refreshToken.strategy';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { ChildsModule } from '../childs/childs.module';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    ChildsService,
+    ChildsService,JwtRefreshTokenStrategy
   ],
   exports: [AuthService, ChildsService],
 })
