@@ -28,6 +28,12 @@ export class ExercisesController {
 
   @UseGuards(JwtAuthGuards, RolesGuard)
   @Roles("Parent", "Admin")
+  @Get("getExercisesByName/:name")
+  async getExercisesByName(@Param('name') name: string){
+  return this.exercisesService.getExercisesByName(name);
+}
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles("Admin")
   @Post("createExercise")
   async createExercise(@Body() createExerciseDto: CreateExerciseDto) {
     return this.exercisesService.createExercise(createExerciseDto);

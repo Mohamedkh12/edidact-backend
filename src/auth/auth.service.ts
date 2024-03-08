@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
@@ -18,7 +18,8 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Childs)
     private childRepository: Repository<Childs>,
-  ) {}
+  ) {
+  }
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.usersService.findOneByusername(username);
@@ -34,7 +35,7 @@ export class AuthService {
     return null;
   }
 
-  async signIn(username: string, password: string): Promise<{ access_token: string, refreshToken: string, user: User | Childs }> {
+  async signIn(username: string, password: string): Promise<{ access_token: string, user: User | Childs }> {
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'roles')
@@ -49,14 +50,14 @@ export class AuthService {
       .getOne();
 
     if (!user && !child) {
-      throw new UnauthorizedException('Utilisateur ou enfant non trouvé');
+      throw new UnauthorizedException('Invalid username or password');
     }
 
     const entity = user || child;
     const isPassword = await bcrypt.compare(password, entity.password);
 
     if (!isPassword) {
-      throw new UnauthorizedException('Mauvais mot de passe');
+      throw new UnauthorizedException('Invalid username or password');
     }
     const payload = {
       username: entity.username,
@@ -65,40 +66,29 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
-    return { access_token: accessToken, refreshToken: refreshToken, user: entity };
+
+
+    return { access_token: accessToken,  user: entity };
   }
 
-
-  async validateToken(token: string): Promise<number | null> {
+  async refreshToken(refreshToken: string): Promise<{ access_token: string }> {
     try {
+      const decoded = this.jwtService.verify(refreshToken)
 
-      const decodedToken = this.jwtService.verify(token)
+      const payload = {
+        username: decoded.username,
+        sub: decoded.sub,
+        roleName: decoded.roleName
+      };
 
-
-      // Assurez-vous que le champ 'sub' est présent dans le token
-      if (decodedToken && typeof decodedToken.sub !== 'undefined') {
-
-        return decodedToken.sub;
-      } else {
-        throw new UnauthorizedException('Token invalide : champ "sub" manquant');
-      }
+      return { access_token: this.jwtService.sign(payload) };
     } catch (error) {
-      console.error('Error in validateToken:', error.message);  // Log l'erreur spécifique
-      throw new UnauthorizedException('Token invalide');
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
-
-  async refreshToken(user: User): Promise<{ refreshToken: string }> {
-    const payload = {
-      username: user.username,
-      sub: user.id,
-      role: user.roles
-    };
-    const refreshToken =  this.jwtService.sign(payload, { expiresIn: '7d' });
-    return {
-      refreshToken: refreshToken,
-    };
-  }
 }
+
+
+
+

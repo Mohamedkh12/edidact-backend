@@ -25,7 +25,7 @@ export class ParentsService {
     }
 
     // 1. Obtenir le parent associé (vous devez ajuster cela selon votre logique)
-    const parentId = createChildDto.id_parent; // Assurez-vous d'obtenir l'ID du parent
+    const parentId = createChildDto.id_parent;
 
     // 2. Associer l'enfant avec le parent
     const parent = await this.parentsRepository.findOne({
