@@ -1,12 +1,23 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import {Injectable, UnauthorizedException, Body} from '@nestjs/common';
-import {UsersService} from '../../users/users.service';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { jwtConstants } from '../jwtConstants';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Childs } from '../../childs/entities/childs.entity';
+import { Repository } from 'typeorm';
+import { Parents } from '../../parents/entities/parents.entity';
 
 @Injectable()
-export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy,"jwt-refresh-token") {
-  constructor(private userService: UsersService) {
+export class JwtRefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh-token',
+) {
+  constructor(
+    @InjectRepository(Childs)
+    private childRepository: Repository<Childs>,
+    @InjectRepository(Parents)
+    private parentRepository: Repository<Parents>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
       ignoreExpiration: true,
@@ -16,11 +27,16 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy,"jwt-refr
   }
 
   async validate(req, payload: any) {
-    const user = await this.userService.findOne(payload.sub);
+    let user;
+    if (payload.role === 'parent') {
+      user = await this.parentRepository.findOne(payload.sub);
+    } else if (payload.role === 'child') {
+      user = await this.childRepository.findOne(payload.sub);
+    }
 
     if (!user) {
       throw new UnauthorizedException();
     }
-    return { sub: payload.id, username: payload.username };
+    return { sub: payload.id, username: payload.username, roleName: payload.roleName };
   }
 }

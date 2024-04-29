@@ -1,64 +1,76 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../users/entities/user.entity';
-import { UsersService } from '../users/users.service';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { Childs } from '../parents/entities/parents.entity';
-import { jwtConstants } from './jwtConstants';
+import { Childs } from '../childs/entities/childs.entity';
+import { Parents } from '../parents/entities/parents.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     @InjectRepository(Childs)
     private childRepository: Repository<Childs>,
-  ) {
-  }
+    @InjectRepository(Parents)
+    private parentRepository: Repository<Parents>,
+    private jwtService: JwtService,
+  ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.usersService.findOneByusername(username);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
+    // Vérifiez si l'utilisateur existe dans la table des parents
+    const parent = await this.parentRepository.findOne({ where: { username } });
+
+    if (parent && (await bcrypt.compare(password, parent.password))) {
+      const { password, ...result } = parent;
       return result;
     }
+
+    // Vérifiez si l'utilisateur existe dans la table des enfants
     const child = await this.childRepository.findOne({ where: { username } });
+
     if (child && (await bcrypt.compare(password, child.password))) {
       const { password, ...result } = child;
       return result;
     }
+
+    // Si ni le parent ni l'enfant n'est trouvé, retournez null
     return null;
   }
 
-  async signIn(username: string, password: string): Promise<{ access_token: string, user: User | Childs }> {
-    const user = await this.userRepository
+  async signIn(
+    username: string,
+    password: string,
+  ): Promise<{ access_token: string; user: Childs | Parents }> {
+    const parent = await this.parentRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'roles')
       .where('user.username = :username', { username })
       .addSelect('roles.name')
       .getOne();
-    const child = user ? null : await this.childRepository
-      .createQueryBuilder('child')
-      .leftJoinAndSelect('child.parents', 'parents')
-      .where('child.username = :username', { username })
-      .addSelect('parents.id')
-      .getOne();
 
-    if (!user && !child) {
+    let child = null;
+
+    if (!parent) {
+      child = await this.childRepository
+        .createQueryBuilder('child')
+        .leftJoinAndSelect('child.roles', 'roles') // Ajoutez cette ligne pour récupérer les rôles de l'enfant
+        .where('child.username = :username', { username })
+        .addSelect('roles.name')
+        .getOne();
+    }
+
+    if (!parent && !child) {
       throw new UnauthorizedException('Invalid username or password');
     }
 
-    const entity = user || child;
-    const isPassword = await bcrypt.compare(password, entity.password);
+    const entity = parent || child;
 
-    if (!isPassword) {
+    const isPasswordValid = await bcrypt.compare(password, entity.password);
+
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid username or password');
     }
+
     const payload = {
       username: entity.username,
       sub: entity.id,
@@ -67,28 +79,34 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-
-
-    return { access_token: accessToken,  user: entity };
+    return { access_token: accessToken, user: entity };
   }
 
-  async refreshToken(refreshToken: string): Promise<{ access_token: string }> {
+  async refreshToken(refreshToken: string): Promise<{ refresh_Token: string }> {
     try {
-      const decoded = this.jwtService.verify(refreshToken)
+      const decoded = this.jwtService.verify(refreshToken);
 
       const payload = {
         username: decoded.username,
         sub: decoded.sub,
-        roleName: decoded.roleName
+        roleName: decoded.roleName,
       };
 
-      return { access_token: this.jwtService.sign(payload) };
+      return { refresh_Token: this.jwtService.sign(payload) };
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+  async checkUserRole(token: string): Promise<string | null> {
+    try {
+      const decoded = this.jwtService.verify(token);
+      console.log('decoded token :', decoded);
+      console.log('decoded.rol:', decoded.roleName);
+      return decoded.roleName || null;
+    } catch (error) {
+      // Si le token est invalide ou expiré
+      console.error('Invalid token:', error);
+      return null;
+    }
+  }
 }
-
-
-
-

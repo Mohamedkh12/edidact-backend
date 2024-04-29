@@ -12,10 +12,9 @@ export class CheckUserIdMiddleware implements NestMiddleware {
 
       const userIdFromToken = decodedToken ? decodedToken.sub : null;
 
-      const userIdFromParams =req.params.id;
+      const userIdFromParams = req.params.id;
 
       if (userIdFromToken !== null && userIdFromToken == userIdFromParams) {
-        console.log(userIdFromParams)
         next();
       } else {
         throw new ForbiddenException('Forbidden');

@@ -1,20 +1,32 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 import { Exercises } from '../../exercises/entities/exercises.entity';
+import { Childs, Parents } from '../../parents/entities/parents.entity';
 
 @Entity()
+@Unique(['parent', 'child'])
 export class Back_pack {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column({type:'int'})
-  idUser: number;
-  @Column({type:'int'})
-  idExercises: number;
-  @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'idUser' })
-  users: User;
 
-  @ManyToOne(() => Exercises, { eager: true })
-  @JoinColumn({ name: 'idExercises' })
-  exercises: Exercises;
+  @ManyToOne(() => Parents, (parents) => parents.backpacks)
+  @JoinColumn({ name: 'parent_id' })
+  parent: Parents;
+
+  @OneToOne(() => Childs, (child) => child.backpack)
+  @JoinColumn({ name: 'child_id' })
+  child: Childs;
+
+  @ManyToMany(() => Exercises, (exercise) => exercise.backpacks)
+  @JoinTable()
+  exercises: Exercises[];
 }

@@ -1,11 +1,16 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateBackpackDto {
   @IsNotEmpty()
   @IsNumber()
-  idExercises: number;
+  parentId: number;
 
   @IsNotEmpty()
   @IsNumber()
-  iduser: number;
+  childId: number;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  exerciseId: number[];
 }

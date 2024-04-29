@@ -1,19 +1,25 @@
-import { Admin } from '../../admin/entities/admin.entity';
-import { User } from '../../users/entities/user.entity';
-import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Childs } from '../../childs/entities/childs.entity';
+import { Back_pack } from '../../back-pack/entities/back_pack.entity';
 
 @Entity()
 export class Exercises {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   category: string;
 
-  @Column()
+  @Column({ type: 'text', nullable: true })
   image: string;
 
-  @Column({ type: 'text', unique: true })
+  @Column({ type: 'text' })
   name: string;
 
   @Column({ type: 'text' })
@@ -22,8 +28,12 @@ export class Exercises {
   @Column({ type: 'text' })
   assignment: string;
 
-  @ManyToMany(() => User, (user) => user.exercises)
-  users: User[];
+  @ManyToMany(() => Childs, (childs) => childs.exercises, { cascade: true })
+  @JoinTable()
+  childs: Childs[];
 
-
+  @ManyToMany(() => Back_pack, (backpack) => backpack.exercises, {
+    cascade: true,
+  })
+  backpacks: Back_pack[];
 }
