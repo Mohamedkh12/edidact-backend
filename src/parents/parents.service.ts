@@ -1,8 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateChildDto } from '../childs/dto/create-child';
 import { Childs, Parents } from './entities/parents.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CreatePrentDto } from './dto/create-Parent.dto';
+import { UpdateChild } from '../childs/dto/update-child';
+import { JwtService } from '@nestjs/jwt';
+import { Roles } from '../roles/entities/roles.entity';
+import * as bcrypt from 'bcrypt';
+import { jwtConstants } from '../auth/jwtConstants';
 
 @Injectable()
 export class ParentsService {
@@ -11,39 +22,255 @@ export class ParentsService {
     private childRepository: Repository<Childs>,
     @InjectRepository(Parents)
     private parentsRepository: Repository<Parents>,
+    @InjectRepository(Roles)
+    private rolesRepository: Repository<Roles>,
+    private jwtService: JwtService,
   ) {}
 
-  async createChild(createChildDto: CreateChildDto): Promise<Childs> {
-    const existingChild = await this.childRepository.findOne({
-      where: { username: createChildDto.username },
-    });
+  async createParent(createPrentDto: CreatePrentDto): Promise<{
+    parent: {
+      password: string;
+      roleId: number;
+      roles: Roles;
+      tel: number;
+      email: string;
+      username: string;
+    } & Parents;
+    access_token: string;
+  }> {
+    try {
+      const roleId = parseInt(createPrentDto.roleId.toString(), 10);
+      const existingParent = await this.parentsRepository.findOne({
+        where: { username: createPrentDto.username },
+      });
 
-    if (existingChild) {
-      throw new NotFoundException(
-        'Child with the same username already exists for this parent',
-      );
+      if (existingParent) {
+        throw new BadRequestException(
+          'Parent with the same username already exists',
+        );
+      }
+      // Vérifiez si le rôle existe
+      const role = await this.rolesRepository.findOne({
+        where: { id: roleId },
+      });
+
+      if (!role) {
+        throw new NotFoundException(`Rôle avec l'ID ${roleId} non trouvé`);
+      }
+      const hashedPassword = await bcrypt.hash(createPrentDto.password, 10);
+      const parent = await this.parentsRepository.save({
+        ...createPrentDto,
+        password: hashedPassword,
+        roleId,
+        roles: role,
+      });
+      const payload = {
+        username: parent.username,
+        sub: parent.id,
+        roleName: role.name,
+      };
+
+      // Générer un token JWT pour le parent
+      const token = await this.jwtService.signAsync(payload, {
+        secret: jwtConstants.secret,
+        expiresIn: '1h',
+      });
+
+      return {
+        parent,
+        access_token: token,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async createChildOrChildren(
+    createChildrenDto: CreateChildDto | CreateChildDto[],
+    image: Express.Multer.File,
+  ): Promise<Childs[]> {
+    try {
+      const childrenToCreate: CreateChildDto[] = Array.isArray(
+        createChildrenDto,
+      )
+        ? createChildrenDto
+        : [createChildrenDto];
+
+      const promises = childrenToCreate.map(async (createChildDto) => {
+        const existingChild = await this.childRepository.findOne({
+          where: { username: createChildDto.username },
+        });
+        if (existingChild) {
+          throw new BadRequestException(
+            'Child with the same username already exists',
+          );
+        }
+
+        const parent = await this.parentsRepository.findOne({
+          where: { id: createChildDto.id_parent },
+        });
+        if (!parent) {
+          throw new NotFoundException(
+            `Parent with ID ${createChildDto.id_parent} not found`,
+          );
+        }
+
+        const child = new Childs();
+        child.username = createChildDto.username;
+        child.email = createChildDto.email;
+        child.password = createChildDto.password;
+        child.classe = createChildDto.classe;
+        child.roleId = createChildDto.roleId;
+        child.parents = parent;
+
+        if (image) {
+          child.image = image.buffer.toString('base64');
+        }
+        return this.childRepository.save(child);
+      });
+
+      return await Promise.all(promises);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async findOne(idOrUsername: number | string): Promise<Parents | undefined> {
+    if (typeof idOrUsername === 'number') {
+      return await this.parentsRepository.findOne({
+        where: { id: idOrUsername },
+      });
+    } else {
+      return await this.parentsRepository.findOne({
+        where: { username: idOrUsername },
+      });
+    }
+  }
+  async findOneChild(idOrUsername: number): Promise<Childs | undefined> {
+    const child = this.childRepository.findOne({
+      where: { id: idOrUsername },
+    });
+    return child;
+  }
+  async findOneChildusername(
+    idOrUsername: string,
+  ): Promise<Childs | undefined> {
+    const child = this.childRepository.findOne({
+      where: { username: idOrUsername },
+    });
+    return child;
+  }
+
+  async findAllChildren(parentId: number): Promise<Childs[]> {
+    return await this.childRepository.find({
+      where: { parents: { id: parentId } },
+    });
+  }
+
+  async updateChild(
+    id: number,
+    updateChildDto: UpdateChild,
+    image: Express.Multer.File,
+  ) {
+    const child = await this.childRepository.findOne({ where: { id: id } });
+    if (!child) {
+      throw new NotFoundException("Child doesn't exist");
     }
 
-    // 1. Obtenir le parent associé (vous devez ajuster cela selon votre logique)
-    const parentId = createChildDto.id_parent;
+    // Vérifier si le prénom est unique
+    if (updateChildDto.username && updateChildDto.username !== child.username) {
+      const existingChild = await this.childRepository.findOne({
+        where: { username: updateChildDto.username },
+      });
+      if (existingChild) {
+        throw new BadRequestException(
+          'Le prénom existe déjà pour un autre enfant',
+        );
+      }
+    }
 
-    // 2. Associer l'enfant avec le parent
+    // Vérifier si l'identifiant (email) est unique
+    if (updateChildDto.email && updateChildDto.email !== child.email) {
+      const existingChild = await this.childRepository.findOne({
+        where: { email: updateChildDto.email },
+      });
+      if (existingChild) {
+        throw new BadRequestException(
+          "L'identifiant existe déjà pour un autre enfant",
+        );
+      }
+    }
+
+    // Mettre à jour l'image si elle est fournie
+    if (image) {
+      updateChildDto.image = image.buffer.toString('base64');
+    }
+
+    // Mettre à jour les autres champs
+    Object.assign(child, updateChildDto);
+
+    return await this.childRepository.save(child);
+  }
+
+  //supprimer un child
+  async remove(id: number) {
+    // Utilisez directement l'ID sans conversion
+    const child = await this.childRepository.findOne({ where: { id: id } });
+
+    if (!child) throw new NotFoundException('child not found');
+    return await this.childRepository.remove(child);
+  }
+  async getParentFromToken(token: string): Promise<Parents | null> {
+    try {
+      // Décodez le token pour obtenir ses informations sans le vérifier
+      const decodedToken = this.jwtService.decode(token);
+      console.log('decodedToken:', decodedToken);
+      if (!decodedToken || !decodedToken.sub) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      // Recherchez le parent dans la base de données en utilisant l'ID extrait du token
+      const parent = await this.parentsRepository.findOne({
+        where: { id: decodedToken.sub }, // Utilisation de l'ID extrait du token comme condition de sélection
+      });
+
+      // Retournez le parent s'il est trouvé, sinon null
+      return parent || null;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      throw new UnauthorizedException('Invalid Parent');
+    }
+  }
+
+  async findChildrenNames(parentId: number): Promise<string[]> {
     const parent = await this.parentsRepository.findOne({
       where: { id: parentId },
+      relations: ['childs'], // Load the related children
     });
-
 
     if (!parent) {
       throw new NotFoundException('Parent not found');
     }
 
-    const child = new Childs();
-    Object.assign(child, createChildDto);
+    // Extract child names from the parent entity
+    const childNames = parent.childs.map((child: Childs) => child.username);
 
-    // Assurez-vous de définir l'enfant avec le parent associé
-    child.parents = parent;
+    return childNames;
+  }
 
-    // Sauvegardez l'enfant dans la base de données
-    return await this.childRepository.save(child);
+  async findChildrenId(parentId: number): Promise<number[]> {
+    const parent = await this.parentsRepository.findOne({
+      where: { id: parentId },
+      relations: ['childs'], // Load the related children
+    });
+
+    if (!parent) {
+      throw new NotFoundException('Parent not found');
+    }
+
+    // Extract child names from the parent entity
+    const childId = parent.childs.map((child: Childs) => child.id);
+
+    return childId;
   }
 }

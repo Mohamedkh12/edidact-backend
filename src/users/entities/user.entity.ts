@@ -6,14 +6,12 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Roles } from '../../roles/entities/roles.entity';
 import { Exercises } from '../../exercises/entities/exercises.entity';
-import { Childs } from '../../childs/entities/childs.entity';
 
 @Entity('users')
 @Unique(['username', 'email'])
@@ -36,10 +34,6 @@ export class User {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'roleId' })
   roles: Roles;
-
-  @ManyToMany(() => Exercises, (exercises) => exercises.users)
-  @JoinTable()
-  exercises: Exercises[];
 
   @BeforeInsert()
   async hashPassword() {

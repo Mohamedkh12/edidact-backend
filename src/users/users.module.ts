@@ -6,17 +6,12 @@ import { User } from './entities/user.entity';
 import { Roles } from '../roles/entities/roles.entity';
 import { RolesGuard } from '../roles/guards/rôles.guard';
 import { RolesModule } from '../roles/roles.module';
-import { ChildsModule } from '../childs/childs.module';
-import { ChildsService } from '../childs/childs.service';
 import { RolesService } from '../roles/roles.service';
-import { JwtStrategy } from '../auth/strategy/jwt.strategy';
-import { AuthService } from '../auth/auth.service';
-
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User,Roles]),RolesModule,ChildsModule],
-  exports: [TypeOrmModule,UsersService,JwtStrategy],
+  imports: [TypeOrmModule.forFeature([User, Roles]), RolesModule],
+  exports: [TypeOrmModule, UsersService],
   controllers: [UsersController],
-  providers: [UsersService,RolesGuard,ChildsService, RolesService,JwtStrategy,RolesGuard,AuthService],
+  providers: [UsersService, RolesGuard, RolesService, RolesGuard],
 })
 export class UsersModule {}

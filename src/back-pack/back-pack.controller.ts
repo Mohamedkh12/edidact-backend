@@ -1,34 +1,54 @@
-import { Body, Controller, Delete, Get, Param, Post, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { CreateBackpackDto } from './dto/create-backpack.dto';
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Body,
+  Param,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { BackPackService } from './back-pack.service';
-import { Role } from '../roles/enums/role.enum';
-import { Roles } from '../roles/decorators/roles.decorator';
+import { CreateBackpackDto } from './dto/create-backpack.dto';
 import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { RolesGuard } from '../roles/guards/rôles.guard';
+import { Roles } from '../roles/decorators/roles.decorator';
 
-@Controller('back-pack')
-
+@Controller('backpack')
 export class BackPackController {
-  constructor(private readonly backpackService: BackPackService) {}
+  constructor(private readonly backPackService: BackPackService) {}
 
-  @UseGuards(JwtAuthGuards,RolesGuard)
-  @Roles("Parent")
-  @Post('addToBackpack')
-  async addToBackpack(@Request() req, @Body() createBackpackDto: CreateBackpackDto) {
-    const { idExercises } = createBackpackDto;
-    const { userId } = req.user;
-    return this.backpackService.addToBackpack(userId, idExercises);
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Parent')
+  @Post('addToBackPack')
+  addToBackPack(@Body() dto: CreateBackpackDto) {
+    return this.backPackService.addToBackPack(dto);
   }
-  @UseGuards(JwtAuthGuards,RolesGuard)
-  @Roles("Parent")
-  @Delete(":idExercises")
-  async deleteFromBackpack(@Param('idExercises') idExercises: number, @Request() req) {
-    const { userId } = req.user;
-    return this.backpackService.deleteFromBackpack(userId, idExercises);
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Parent')
+  @Delete('removeFromBackPack')
+  async removeFromBackPack(
+    @Query('idBackPack') idBackPack: number,
+    @Query('idExercise') idExercise: number,
+  ): Promise<void> {
+    await this.backPackService.removeExerciseFromBackpack(
+      idBackPack,
+      idExercise,
+    );
   }
-  @UseGuards(JwtAuthGuards)
-  @Get("getAllBackpack")
-  async getAllBackpack() {
-    return this.backpackService.findAll();
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Parent')
+  @Get('getBackPackByParent/:id')
+  getBackPackByParent(@Param('id') id: number) {
+    return this.backPackService.getBackPackByParent(id);
+  }
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Parent', 'Child')
+  @Get('getBackPackByChild/:id')
+  getBackPackByChild(@Param('id') id: number) {
+    return this.backPackService.getBackPackByChild(id);
   }
 }

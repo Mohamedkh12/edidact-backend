@@ -1,13 +1,16 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as jwt from 'jsonwebtoken';
 import { jwtConstants } from '../../auth/jwtConstants';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.get<string[]>('roles', context.getHandler());
@@ -19,22 +22,35 @@ export class RolesGuard implements CanActivate {
     const token = this.extractTokenFromRequest(request);
 
     if (!token) {
-      return false;
+      throw new UnauthorizedException('Token not found');
     }
 
-    const user = await this.verifyToken(token, jwtConstants.secret);
+    try {
+      const user = await this.verifyToken(token, jwtConstants.secret);
 
-    if (!user || !user.roleName) {
-      return false;
+      if (!user || !user.roleName) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      const userRoles = Array.isArray(user.roleName)
+        ? user.roleName
+        : [user.roleName];
+      const requiredRoles = roles.map((role: string) => role);
+
+      const hasRequiredRole = requiredRoles.some((role: string) =>
+        userRoles.includes(role),
+      );
+
+      if (!hasRequiredRole) {
+        throw new UnauthorizedException('Insufficient permissions');
+      }
+
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException(
+        'Invalid token or insufficient permissions',
+      );
     }
-
-    const userRoles = Array.isArray(user.roleName) ? user.roleName : [user.roleName];
-
-    const requiredRoles = roles.map((role: any) => role);
-
-    const hasRequiredRole = requiredRoles.some((role: string) => userRoles.includes(role));
-
-    return hasRequiredRole;
   }
 
   private extractTokenFromRequest(request: any): string | null {
