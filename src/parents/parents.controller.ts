@@ -4,10 +4,8 @@ import {
   Delete,
   Get,
   Headers,
-  HttpStatus,
   NotFoundException,
   Param,
-  ParseFilePipeBuilder,
   ParseIntPipe,
   Patch,
   Post,
@@ -27,8 +25,6 @@ import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { RolesGuard } from '../roles/guards/rôles.guard';
 import { UpdateChild } from '../childs/dto/update-child';
 
-const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 2 * 1024 * 1024;
-
 @Controller('parents')
 export class ParentsController {
   constructor(private readonly parentsService: ParentsService) {}
@@ -38,7 +34,11 @@ export class ParentsController {
   async createParent(@Body() createPrentDto: CreatePrentDto) {
     return await this.parentsService.createParent(createPrentDto);
   }
-
+  @Public()
+  @Post('verifiyEmail')
+  async verifiyEmail(@Body('email') email: string) {
+    return await this.parentsService.verifyEmail(email);
+  }
   @UseGuards(JwtAuthGuards, RolesGuard)
   @Roles('Parent')
   @Get('findParent/:id')
@@ -64,32 +64,12 @@ export class ParentsController {
   }
 
   @Public()
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  public async uploadFile(
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
-    file,
-  ) {
-    return file;
-  }
-
-  @Public()
   @Post('createChildren')
   @UseInterceptors(FileInterceptor('image'))
   async createChildren(
     @Body() createChildrenDto: CreateChildDto | CreateChildDto[],
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
-    image,
-  ): Promise<Childs[] | Childs> {
+    @UploadedFile() image,
+  ): Promise<Awaited<Childs | Childs>[]> {
     try {
       const createdChildren = await this.parentsService.createChildOrChildren(
         createChildrenDto,
@@ -104,6 +84,13 @@ export class ParentsController {
     }
   }
 
+  @Public()
+  @Get('findChildByUsername/:username')
+  async findChildByUsername(
+    @Param('username') username: string,
+  ): Promise<{ found: boolean; child?: Childs }> {
+    return await this.parentsService.findChildByUsername(username);
+  }
   @UseGuards(JwtAuthGuards, RolesGuard)
   @Roles('Parent')
   @UseInterceptors(FileInterceptor('image'))
@@ -111,12 +98,7 @@ export class ParentsController {
   async updateChild(
     @Param('id') id: number,
     @Body() updateChildDto: UpdateChild,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
-    image,
+    @UploadedFile() image,
   ) {
     return await this.parentsService.updateChild(id, updateChildDto, image);
   }
