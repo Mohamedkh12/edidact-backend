@@ -41,6 +41,12 @@ let AuthController = class AuthController {
             return yield this.authService.refreshToken(refreshToken);
         });
     }
+    logout(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.authService.logout(req);
+            return { message: 'Logged out successfully' };
+        });
+    }
     getUserRole(authHeader) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('authHeader', authHeader);
@@ -72,6 +78,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refreshToken", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)('logout'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Get)('userRole'),

@@ -5,11 +5,14 @@ import {
   UseGuards,
   Get,
   Headers,
+  Req,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { JwtRefreshTokenStrategy } from './strategy/refreshToken.strategy';
-
+import { JwtAuthGuards } from './strategy/jwt-auth.guards';
+import { Request } from 'express';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -27,7 +30,12 @@ export class AuthController {
   async refreshToken(@Body('refresh_Token') refreshToken: string) {
     return await this.authService.refreshToken(refreshToken);
   }
-
+  @Public()
+  @Post('logout')
+  async logout(@Req() req: any) {
+    await this.authService.logout(req);
+    return { message: 'Logged out successfully' };
+  }
   @Public()
   @Get('userRole')
   async getUserRole(
