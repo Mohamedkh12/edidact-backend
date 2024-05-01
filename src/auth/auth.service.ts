@@ -1,10 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Childs } from '../childs/entities/childs.entity';
 import { Parents } from '../parents/entities/parents.entity';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -108,5 +114,17 @@ export class AuthService {
       console.error('Invalid token:', error);
       return null;
     }
+  }
+
+  async logout(req: any): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      req.logout((err: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 }

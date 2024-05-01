@@ -31,7 +31,6 @@ const roles_decorator_1 = require("../roles/decorators/roles.decorator");
 const jwt_auth_guards_1 = require("../auth/strategy/jwt-auth.guards");
 const r_les_guard_1 = require("../roles/guards/r\u00F4les.guard");
 const update_child_1 = require("../childs/dto/update-child");
-const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 2 * 1024 * 1024;
 let ParentsController = class ParentsController {
     constructor(parentsService) {
         this.parentsService = parentsService;
@@ -39,6 +38,11 @@ let ParentsController = class ParentsController {
     createParent(createPrentDto) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.parentsService.createParent(createPrentDto);
+        });
+    }
+    verifiyEmail(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.parentsService.verifyEmail(email);
         });
     }
     findOne(id) {
@@ -56,11 +60,6 @@ let ParentsController = class ParentsController {
             return yield this.parentsService.findAllChildren(parentId);
         });
     }
-    uploadFile(file) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return file;
-        });
-    }
     createChildren(createChildrenDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -71,6 +70,11 @@ let ParentsController = class ParentsController {
                 console.error('Erreur lors de la création :', error);
                 throw new common_1.UnauthorizedException("Erreur lors de la création de l'enfant.");
             }
+        });
+    }
+    findChildByUsername(username) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.parentsService.findChildByUsername(username);
         });
     }
     updateChild(id, updateChildDto, image) {
@@ -118,6 +122,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ParentsController.prototype, "createParent", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)('verifiyEmail'),
+    __param(0, (0, common_1.Body)('email')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ParentsController.prototype, "verifiyEmail", null);
+__decorate([
     (0, common_1.UseGuards)(jwt_auth_guards_1.JwtAuthGuards, r_les_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('Parent'),
     (0, common_1.Get)('findParent/:id'),
@@ -147,27 +159,22 @@ __decorate([
 ], ParentsController.prototype, "findAllChildren", null);
 __decorate([
     (0, public_decorator_1.Public)(),
-    (0, common_1.Post)('upload'),
-    (0, common_1.UseInterceptors)((0, multer_1.FileInterceptor)('file')),
-    __param(0, (0, common_1.UploadedFile)(new common_1.ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: common_1.HttpStatus.UNPROCESSABLE_ENTITY }))),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], ParentsController.prototype, "uploadFile", null);
-__decorate([
-    (0, public_decorator_1.Public)(),
     (0, common_1.Post)('createChildren'),
     (0, common_1.UseInterceptors)((0, multer_1.FileInterceptor)('image')),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.UploadedFile)(new common_1.ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: common_1.HttpStatus.UNPROCESSABLE_ENTITY }))),
+    __param(1, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ParentsController.prototype, "createChildren", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('findChildByUsername/:username'),
+    __param(0, (0, common_1.Param)('username')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ParentsController.prototype, "findChildByUsername", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guards_1.JwtAuthGuards, r_les_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('Parent'),
@@ -175,9 +182,7 @@ __decorate([
     (0, common_1.Patch)('updateChild/:id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.UploadedFile)(new common_1.ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: common_1.HttpStatus.UNPROCESSABLE_ENTITY }))),
+    __param(2, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, update_child_1.UpdateChild, Object]),
     __metadata("design:returntype", Promise)

@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Roles } from '../roles/entities/roles.entity';
 import * as bcrypt from 'bcrypt';
 import { jwtConstants } from '../auth/jwtConstants';
+import * as dns from 'dns';
 
 @Injectable()
 export class ParentsService {
@@ -84,11 +85,31 @@ export class ParentsService {
       throw new BadRequestException(error.message);
     }
   }
+  async verifyEmail(email: string): Promise<boolean> {
+    // Vérification de l'email avec une expression régulière
+    const emailRegex = /^\S+@\S+$/i;
+    if (!emailRegex.test(email)) {
+      throw new BadRequestException('Invalid email');
+    }
 
+    // Extraction du domaine de l'email
+    const domain = email.split('@')[1];
+
+    // Requête DNS pour vérifier le domaine
+    return new Promise((resolve, reject) => {
+      dns.resolve(domain, 'MX', (err, addresses) => {
+        if (err || !addresses || addresses.length === 0) {
+          reject(new BadRequestException('Invalid domain'));
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
   async createChildOrChildren(
     createChildrenDto: CreateChildDto | CreateChildDto[],
     image: Express.Multer.File,
-  ): Promise<Childs[]> {
+  ): Promise<Awaited<Childs | Childs>[]> {
     try {
       const childrenToCreate: CreateChildDto[] = Array.isArray(
         createChildrenDto,
@@ -100,11 +121,6 @@ export class ParentsService {
         const existingChild = await this.childRepository.findOne({
           where: { username: createChildDto.username },
         });
-        if (existingChild) {
-          throw new BadRequestException(
-            'Child with the same username already exists',
-          );
-        }
 
         const parent = await this.parentsRepository.findOne({
           where: { id: createChildDto.id_parent },
@@ -117,12 +133,14 @@ export class ParentsService {
 
         const child = new Childs();
         child.username = createChildDto.username;
-        child.email = createChildDto.email;
         child.password = createChildDto.password;
         child.classe = createChildDto.classe;
         child.roleId = createChildDto.roleId;
         child.parents = parent;
-
+        if (existingChild) {
+          const parentId = createChildDto.id_parent;
+          child.email = `${createChildDto.username}${parentId}`;
+        }
         if (image) {
           child.image = image.buffer.toString('base64');
         }
@@ -149,14 +167,6 @@ export class ParentsService {
   async findOneChild(idOrUsername: number): Promise<Childs | undefined> {
     const child = this.childRepository.findOne({
       where: { id: idOrUsername },
-    });
-    return child;
-  }
-  async findOneChildusername(
-    idOrUsername: string,
-  ): Promise<Childs | undefined> {
-    const child = this.childRepository.findOne({
-      where: { username: idOrUsername },
     });
     return child;
   }
@@ -272,5 +282,23 @@ export class ParentsService {
     const childId = parent.childs.map((child: Childs) => child.id);
 
     return childId;
+  }
+
+  async findChildByUsername(
+    username: string,
+  ): Promise<{ found: boolean; child?: Childs }> {
+    try {
+      const child = await this.childRepository.findOne({
+        where: { username },
+      });
+
+      if (child) {
+        return { found: true, child };
+      } else {
+        return { found: false };
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

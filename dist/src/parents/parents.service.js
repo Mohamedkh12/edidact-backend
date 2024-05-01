@@ -30,6 +30,7 @@ const jwt_1 = require("@nestjs/jwt");
 const roles_entity_1 = require("../roles/entities/roles.entity");
 const bcrypt = require("bcrypt");
 const jwtConstants_1 = require("../auth/jwtConstants");
+const dns = require("dns");
 let ParentsService = class ParentsService {
     constructor(childRepository, parentsRepository, rolesRepository, jwtService) {
         this.childRepository = childRepository;
@@ -76,6 +77,28 @@ let ParentsService = class ParentsService {
             }
         });
     }
+    verifyEmail(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Vérification de l'email avec une expression régulière
+            const emailRegex = /^\S+@\S+$/i;
+            if (!emailRegex.test(email)) {
+                throw new common_1.BadRequestException('Invalid email');
+            }
+            // Extraction du domaine de l'email
+            const domain = email.split('@')[1];
+            // Requête DNS pour vérifier le domaine
+            return new Promise((resolve, reject) => {
+                dns.resolve(domain, 'MX', (err, addresses) => {
+                    if (err || !addresses || addresses.length === 0) {
+                        reject(new common_1.BadRequestException('Invalid domain'));
+                    }
+                    else {
+                        resolve(true);
+                    }
+                });
+            });
+        });
+    }
     createChildOrChildren(createChildrenDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -86,9 +109,6 @@ let ParentsService = class ParentsService {
                     const existingChild = yield this.childRepository.findOne({
                         where: { username: createChildDto.username },
                     });
-                    if (existingChild) {
-                        throw new common_1.BadRequestException('Child with the same username already exists');
-                    }
                     const parent = yield this.parentsRepository.findOne({
                         where: { id: createChildDto.id_parent },
                     });
@@ -97,11 +117,14 @@ let ParentsService = class ParentsService {
                     }
                     const child = new parents_entity_1.Childs();
                     child.username = createChildDto.username;
-                    child.email = createChildDto.email;
                     child.password = createChildDto.password;
                     child.classe = createChildDto.classe;
                     child.roleId = createChildDto.roleId;
                     child.parents = parent;
+                    if (existingChild) {
+                        const parentId = createChildDto.id_parent;
+                        child.email = `${createChildDto.username}${parentId}`;
+                    }
                     if (image) {
                         child.image = image.buffer.toString('base64');
                     }
@@ -132,14 +155,6 @@ let ParentsService = class ParentsService {
         return __awaiter(this, void 0, void 0, function* () {
             const child = this.childRepository.findOne({
                 where: { id: idOrUsername },
-            });
-            return child;
-        });
-    }
-    findOneChildusername(idOrUsername) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const child = this.childRepository.findOne({
-                where: { username: idOrUsername },
             });
             return child;
         });
@@ -242,6 +257,24 @@ let ParentsService = class ParentsService {
             // Extract child names from the parent entity
             const childId = parent.childs.map((child) => child.id);
             return childId;
+        });
+    }
+    findChildByUsername(username) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const child = yield this.childRepository.findOne({
+                    where: { username },
+                });
+                if (child) {
+                    return { found: true, child };
+                }
+                else {
+                    return { found: false };
+                }
+            }
+            catch (error) {
+                throw new common_1.BadRequestException(error.message);
+            }
         });
     }
 };

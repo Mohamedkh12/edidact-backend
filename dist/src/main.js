@@ -13,7 +13,10 @@ const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const passport = require("passport");
 const helmet_1 = require("helmet");
+const jwtConstants_1 = require("./auth/jwtConstants");
 function bootstrap() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = yield core_1.NestFactory.create(app_module_1.AppModule);
@@ -24,7 +27,13 @@ function bootstrap() {
         });
         app.use((0, helmet_1.default)({
             crossOriginResourcePolicy: false,
+        }), session({
+            secret: jwtConstants_1.jwtConstants.secret,
+            resave: false,
+            saveUninitialized: false,
         }));
+        app.use(passport.initialize());
+        app.use(passport.session());
         app.use(bodyParser.json({ limit: '50mb' }));
         app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
         app.use(cookieParser());
