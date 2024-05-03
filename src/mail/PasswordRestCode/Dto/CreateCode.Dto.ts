@@ -7,6 +7,9 @@ export class CreateCodeDto {
   @IsNumber()
   code: string;
 
+  @IsNumber()
+  resetCode: string;
+
   dateCreation: Date;
 
   dateExpiration: Date;

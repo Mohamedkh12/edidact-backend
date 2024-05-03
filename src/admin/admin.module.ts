@@ -24,5 +24,6 @@ import { JwtModule } from '@nestjs/jwt';
   ],
   controllers: [AdminController],
   providers: [AdminService],
+  exports: [AdminService, TypeOrmModule],
 })
 export class AdminModule {}

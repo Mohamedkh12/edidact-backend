@@ -24,13 +24,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParentsController = void 0;
 const common_1 = require("@nestjs/common");
 const parents_service_1 = require("./parents.service");
+const create_child_1 = require("../childs/dto/create-child");
 const create_Parent_dto_1 = require("./dto/create-Parent.dto");
 const public_decorator_1 = require("../auth/decorators/public.decorator");
 const multer_1 = require("@nestjs/platform-express/multer");
 const roles_decorator_1 = require("../roles/decorators/roles.decorator");
 const jwt_auth_guards_1 = require("../auth/strategy/jwt-auth.guards");
 const r_les_guard_1 = require("../roles/guards/r\u00F4les.guard");
-const update_child_1 = require("../childs/dto/update-child");
 let ParentsController = class ParentsController {
     constructor(parentsService) {
         this.parentsService = parentsService;
@@ -184,7 +184,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, update_child_1.UpdateChild, Object]),
+    __metadata("design:paramtypes", [Number, create_child_1.UpdateChildDto, Object]),
     __metadata("design:returntype", Promise)
 ], ParentsController.prototype, "updateChild", null);
 __decorate([

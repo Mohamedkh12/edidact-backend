@@ -129,6 +129,7 @@ let ExercisesService = class ExercisesService {
     //afficher les exercices par categories
     getExercisesByCategory(category, image) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(category);
             const exercises = yield this.exercisesRepository
                 .createQueryBuilder('exercise')
                 .where('exercise.category = :category', { category })
@@ -146,6 +147,7 @@ let ExercisesService = class ExercisesService {
                     exercise.image = image.buffer.toString('base64');
                 });
             }
+            console.log(exercises);
             return exercises;
         });
     }

@@ -121,10 +121,8 @@ let ParentsService = class ParentsService {
                     child.classe = createChildDto.classe;
                     child.roleId = createChildDto.roleId;
                     child.parents = parent;
-                    if (existingChild) {
-                        const parentId = createChildDto.id_parent;
-                        child.email = `${createChildDto.username}${parentId}`;
-                    }
+                    const parentId = createChildDto.id_parent;
+                    child.email = `${createChildDto.username}${parentId}`;
                     if (image) {
                         child.image = image.buffer.toString('base64');
                     }
@@ -166,7 +164,8 @@ let ParentsService = class ParentsService {
             });
         });
     }
-    updateChild(id, updateChildDto, image) {
+    updateChild(id, updateChildDto, // Utilisez le bon DTO ici
+    image) {
         return __awaiter(this, void 0, void 0, function* () {
             const child = yield this.childRepository.findOne({ where: { id: id } });
             if (!child) {
@@ -196,6 +195,10 @@ let ParentsService = class ParentsService {
             }
             // Mettre à jour les autres champs
             Object.assign(child, updateChildDto);
+            if (updateChildDto.password) {
+                // Hasher le nouveau mot de passe
+                child.password = yield bcrypt.hash(updateChildDto.password, 10);
+            }
             return yield this.childRepository.save(child);
         });
     }

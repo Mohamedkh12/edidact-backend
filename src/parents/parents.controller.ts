@@ -15,7 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ParentsService } from './parents.service';
-import { CreateChildDto } from '../childs/dto/create-child';
+import { CreateChildDto, UpdateChildDto } from '../childs/dto/create-child';
 import { Childs, Parents } from './entities/parents.entity';
 import { CreatePrentDto } from './dto/create-Parent.dto';
 import { Public } from '../auth/decorators/public.decorator';
@@ -23,7 +23,6 @@ import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { Roles } from '../roles/decorators/roles.decorator';
 import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { RolesGuard } from '../roles/guards/rôles.guard';
-import { UpdateChild } from '../childs/dto/update-child';
 
 @Controller('parents')
 export class ParentsController {
@@ -97,7 +96,7 @@ export class ParentsController {
   @Patch('updateChild/:id')
   async updateChild(
     @Param('id') id: number,
-    @Body() updateChildDto: UpdateChild,
+    @Body() updateChildDto: UpdateChildDto,
     @UploadedFile() image,
   ) {
     return await this.parentsService.updateChild(id, updateChildDto, image);

@@ -108,7 +108,8 @@ export class ExercisesController {
     @UploadedFile() imageFile,
   ) {
     try {
-      const exercisesByCategory = await this.exercisesService.getExercisesByCategory(category, imageFile);
+      const exercisesByCategory =
+        await this.exercisesService.getExercisesByCategory(category, imageFile);
       return exercisesByCategory;
     } catch (error) {
       return {

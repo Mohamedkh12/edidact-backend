@@ -17,4 +17,6 @@ export class Parents extends User {
   @OneToMany(() => Codes, (code) => code.parent)
   codes: Codes[];
 }
+
 export { Childs };
+

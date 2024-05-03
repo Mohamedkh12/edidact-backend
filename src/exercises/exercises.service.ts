@@ -117,6 +117,7 @@ export class ExercisesService {
 
   //afficher les exercices par categories
   async getExercisesByCategory(category: string, image): Promise<Exercises[]> {
+    console.log(category);
     const exercises = await this.exercisesRepository
       .createQueryBuilder('exercise')
       .where('exercise.category = :category', { category })
@@ -134,6 +135,7 @@ export class ExercisesService {
         exercise.image = image.buffer.toString('base64');
       });
     }
+    console.log(exercises);
     return exercises;
   }
 
