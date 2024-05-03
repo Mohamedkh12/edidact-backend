@@ -4,12 +4,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateChildDto } from '../childs/dto/create-child';
+import { CreateChildDto, UpdateChildDto } from '../childs/dto/create-child';
 import { Childs, Parents } from './entities/parents.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePrentDto } from './dto/create-Parent.dto';
-import { UpdateChild } from '../childs/dto/update-child';
 import { JwtService } from '@nestjs/jwt';
 import { Roles } from '../roles/entities/roles.entity';
 import * as bcrypt from 'bcrypt';
@@ -137,10 +136,8 @@ export class ParentsService {
         child.classe = createChildDto.classe;
         child.roleId = createChildDto.roleId;
         child.parents = parent;
-        if (existingChild) {
-          const parentId = createChildDto.id_parent;
-          child.email = `${createChildDto.username}${parentId}`;
-        }
+        const parentId = createChildDto.id_parent;
+        child.email = `${createChildDto.username}${parentId}`;
         if (image) {
           child.image = image.buffer.toString('base64');
         }
@@ -179,7 +176,7 @@ export class ParentsService {
 
   async updateChild(
     id: number,
-    updateChildDto: UpdateChild,
+    updateChildDto: UpdateChildDto, // Utilisez le bon DTO ici
     image: Express.Multer.File,
   ) {
     const child = await this.childRepository.findOne({ where: { id: id } });
@@ -218,10 +215,12 @@ export class ParentsService {
 
     // Mettre à jour les autres champs
     Object.assign(child, updateChildDto);
-
+    if (updateChildDto.password) {
+      // Hasher le nouveau mot de passe
+      child.password = await bcrypt.hash(updateChildDto.password, 10);
+    }
     return await this.childRepository.save(child);
   }
-
   //supprimer un child
   async remove(id: number) {
     // Utilisez directement l'ID sans conversion

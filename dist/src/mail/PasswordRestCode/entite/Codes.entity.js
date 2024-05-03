@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Codes = void 0;
 const typeorm_1 = require("typeorm");
 const parents_entity_1 = require("../../../parents/entities/parents.entity");
+const admin_entity_1 = require("../../../admin/entities/admin.entity");
 let Codes = class Codes {
 };
 exports.Codes = Codes;
@@ -20,10 +21,15 @@ __decorate([
     __metadata("design:type", Number)
 ], Codes.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => parents_entity_1.Parents, (parents) => parents.codes),
+    (0, typeorm_1.ManyToOne)(() => parents_entity_1.Parents, (parents) => parents.codes, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'id_parent' }),
     __metadata("design:type", parents_entity_1.Parents)
 ], Codes.prototype, "parent", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => admin_entity_1.Admin, (admin) => admin.codes, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'id_admin' }),
+    __metadata("design:type", admin_entity_1.Admin)
+], Codes.prototype, "admin", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)

@@ -22,4 +22,8 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", String)
 ], CreateCodeDto.prototype, "code", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", String)
+], CreateCodeDto.prototype, "resetCode", void 0);
 //# sourceMappingURL=CreateCode.Dto.js.map

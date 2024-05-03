@@ -24,14 +24,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MailService = void 0;
 const common_1 = require("@nestjs/common");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
 const typeorm_1 = require("@nestjs/typeorm");
 const Codes_entity_1 = require("./PasswordRestCode/entite/Codes.entity");
 const typeorm_2 = require("typeorm");
 const parents_entity_1 = require("../parents/entities/parents.entity");
+const admin_entity_1 = require("../admin/entities/admin.entity");
 let MailService = class MailService {
-    constructor(codeRepository, parentRepository) {
+    constructor(codeRepository, parentRepository, adminRepository) {
         this.codeRepository = codeRepository;
         this.parentRepository = parentRepository;
+        this.adminRepository = adminRepository;
         this.transporter = nodemailer.createTransport({
             host: 'mail.infomaniak.com',
             port: 587,
@@ -45,28 +48,49 @@ let MailService = class MailService {
             },
         });
     }
-    createCode(parentEmail) {
+    createCode(email) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 // Recherche du parent par son adresse e-mail
                 const parent = yield this.parentRepository.findOne({
-                    where: { email: parentEmail },
+                    where: { email: email },
                 });
-                if (!parent) {
-                    throw new Error('Parent with this email does not exist');
+                // Recherche de l'admin par son adresse e-mail
+                const admin = yield this.adminRepository.findOne({
+                    where: { email: email },
+                });
+                if (!parent && !admin) {
+                    // Si ni un parent ni un admin n'est trouvé
+                    throw new Error('User with this email does not exist');
                 }
                 // Génération du code
                 const code = Math.floor(1000 + Math.random() * 9000);
                 const dateCreation = new Date();
                 const dateExpiration = new Date(Date.now() + 60000);
-                // Enregistrement du code avec l'identifiant du parent trouvé
-                yield this.codeRepository.save({
-                    code: code,
-                    dateCreation: dateCreation,
-                    dateExpiration: dateExpiration,
-                    parent: { id: parent.id },
+                if (parent) {
+                    // Enregistrement du code avec l'identifiant du parent trouvé
+                    yield this.codeRepository.save({
+                        code: code,
+                        dateCreation: dateCreation,
+                        dateExpiration: dateExpiration,
+                        parent: { id: parent.id },
+                    });
+                    return code;
+                }
+                else if (admin) {
+                    // Enregistrement du code avec l'identifiant de l'admin trouvé
+                    yield this.codeRepository.save({
+                        code: code,
+                        dateCreation: dateCreation,
+                        dateExpiration: dateExpiration,
+                        admin: { id: admin.id },
+                    });
+                    return code;
+                }
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 heures en millisecondes
+                yield this.codeRepository.delete({
+                    dateCreation: (0, typeorm_2.LessThan)(twentyFourHoursAgo),
                 });
-                return code;
             }
             catch (error) {
                 console.error('Error creating code:', error);
@@ -95,32 +119,99 @@ let MailService = class MailService {
     forgotPassword(email) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                // Vérifier si l'e-mail existe dans le tableau des parents
-                const parent = yield this.parentRepository.findOne({
-                    where: { email: email },
-                });
-                if (!parent) {
-                    throw new Error('Parent with this email does not exist');
+                // Vérifier si l'utilisateur est un parent ou un admin
+                const user = (yield this.parentRepository.findOne({ where: { email } })) ||
+                    (yield this.adminRepository.findOne({ where: { email } }));
+                if (!user) {
+                    throw new Error('User with this email does not exist');
                 }
-                // Vérifier si un code non expiré existe déjà pour cet e-mail
-                const existingCode = yield this.codeRepository.findOne({
-                    where: { parent: parent, dateExpiration: (0, typeorm_2.MoreThan)(new Date()) },
-                });
-                if (existingCode) {
-                    throw new Error('A non-expired code already exists for this email');
-                }
-                const code = yield this.createCode(parent.email);
+                const code = yield this.createCode(email);
                 yield this.transporter.sendMail({
                     from: 'hello@edidact.ch',
                     to: email,
                     subject: 'Reset Password',
-                    html: `<p>Your reset code is: ${code}</p>`,
+                    html: `<p>Your code is: ${code}</p>`,
                 });
                 console.log('Email sent successfully');
                 return { success: true, code: code };
             }
             catch (error) {
                 console.error('Error sending email:', error);
+                throw error;
+            }
+        });
+    }
+    getUserCodeCountToday(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Vérifier si l'utilisateur est un parent ou un admin
+                const user = (yield this.parentRepository.findOne({ where: { email } })) ||
+                    (yield this.adminRepository.findOne({ where: { email } }));
+                if (!user) {
+                    throw new Error('User with this email does not exist');
+                }
+                const today = new Date();
+                const todayCodesCount = yield this.codeRepository.count({
+                    where: {
+                        [user instanceof parents_entity_1.Parents ? 'parent' : 'admin']: user,
+                        dateCreation: (0, typeorm_2.Between)(new Date(today.getFullYear(), today.getMonth(), today.getDate()), today),
+                    },
+                });
+                return todayCodesCount;
+            }
+            catch (error) {
+                console.error('Error getting user code count:', error);
+                throw error;
+            }
+        });
+    }
+    resendCode(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Vérifier si l'utilisateur est un parent ou un admin
+                const user = (yield this.parentRepository.findOne({ where: { email } })) ||
+                    (yield this.adminRepository.findOne({ where: { email } }));
+                if (!user) {
+                    throw new Error('User with this email does not exist');
+                }
+                // Vérifier s'il existe un code non expiré pour l'utilisateur
+                const existingCode = yield this.codeRepository.findOne({
+                    where: Object.assign(Object.assign({}, (user instanceof parents_entity_1.Parents ? { parent: user } : { admin: user })), { dateExpiration: (0, typeorm_2.MoreThan)(new Date()) }),
+                });
+                // Si existingCode est défini et plus d'une minute s'est écoulée depuis la création du code
+                if (existingCode) {
+                    const currentTime = new Date();
+                    const timeDiff = currentTime.getTime() - existingCode.dateCreation.getTime();
+                    const minutesPassed = Math.floor(timeDiff / (1000 * 60)); // Convertir en minutes
+                    // Si plus d'une minute s'est écoulée depuis la création du code
+                    if (minutesPassed >= 1) {
+                        // Créer un nouveau code pour le parent ou l'admin
+                        const newCode = yield this.createCode(email);
+                        yield this.transporter.sendMail({
+                            from: 'hello@edidact.ch',
+                            to: email,
+                            subject: 'Reset Password',
+                            html: `<p>Your new reset code is: ${newCode}</p>`,
+                        });
+                        console.log('New code sent successfully');
+                        return { success: true, code: newCode };
+                    }
+                }
+                else {
+                    // S'il n'y a pas de code existant ou si le code existant est expiré, créer et envoyer un nouveau code
+                    const newCode = yield this.createCode(email);
+                    yield this.transporter.sendMail({
+                        from: 'hello@edidact.ch',
+                        to: email,
+                        subject: 'Reset Password',
+                        html: `<p>Your new reset code is: ${newCode}</p>`,
+                    });
+                    console.log('New code sent successfully');
+                    return { success: true, code: newCode };
+                }
+            }
+            catch (error) {
+                console.error('Error resending email:', error);
                 throw error;
             }
         });
@@ -136,78 +227,38 @@ let MailService = class MailService {
                     currentDate: new Date(),
                 })
                     .getOne();
-                if (!existingCode) {
+                const codeAdmin = yield this.codeRepository
+                    .createQueryBuilder('code')
+                    .leftJoinAndSelect('code.admin', 'admin')
+                    .where('code.dateExpiration > :currentDate', {
+                    currentDate: new Date(),
+                })
+                    .getOne();
+                if (!existingCode && !codeAdmin) {
                     throw new Error('Invalid or expired verification code');
                 }
+                // Hasher le nouveau mot de passe
+                const hashedPassword = yield bcrypt.hash(newPassword, 10);
                 console.log('Password reset successfully');
-                // Mettre à jour le mot de passe du parent
-                return yield this.parentRepository
-                    .createQueryBuilder()
-                    .update(parents_entity_1.Parents)
-                    .set({ password: newPassword })
-                    .where('id = :id', { id: existingCode.parent.id })
-                    .execute();
+                if (existingCode && existingCode.parent) {
+                    yield this.parentRepository
+                        .createQueryBuilder()
+                        .update(parents_entity_1.Parents)
+                        .set({ password: hashedPassword }) // Utiliser le mot de passe haché
+                        .where('id = :id', { id: existingCode.parent.id })
+                        .execute();
+                }
+                else if (codeAdmin && codeAdmin.admin) {
+                    yield this.adminRepository
+                        .createQueryBuilder()
+                        .update(admin_entity_1.Admin)
+                        .set({ password: hashedPassword }) // Utiliser le mot de passe haché
+                        .where('id = :id', { id: codeAdmin.admin.id })
+                        .execute();
+                }
             }
             catch (error) {
                 console.error('Error resetting password:', error);
-                throw error;
-            }
-        });
-    }
-    resendCode(email) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const parent = yield this.parentRepository.findOne({ where: { email } });
-                if (!parent) {
-                    throw new Error('Parent with this email does not exist');
-                }
-                const existingCode = yield this.codeRepository.findOne({
-                    where: { parent: parent, dateExpiration: (0, typeorm_2.MoreThan)(new Date()) },
-                });
-                // Si un code existant est trouvé
-                if (existingCode) {
-                    const currentTime = new Date();
-                    const timeDiff = currentTime.getTime() - existingCode.dateCreation.getTime();
-                    const minutesPassed = Math.floor(timeDiff / (1000 * 60)); // Convertir en minutes
-                    // Si plus d'une minute s'est écoulée depuis la création du code
-                    if (minutesPassed >= 1) {
-                        const newCode = yield this.createCode(parent.email); // Créer un nouveau code
-                        yield this.transporter.sendMail({
-                            from: 'hello@edidact.ch',
-                            to: email,
-                            subject: 'Reset Password',
-                            html: `<p>Your new reset code is: ${newCode}</p>`,
-                        });
-                        console.log('New code sent successfully');
-                        return { success: true, code: newCode };
-                    }
-                    else {
-                        // Si moins d'une minute s'est écoulée, renvoyer le code existant
-                        yield this.transporter.sendMail({
-                            from: 'hello@edidact.ch',
-                            to: email,
-                            subject: 'Reset Password',
-                            html: `<p>Your reset code is: ${existingCode.code}</p>`,
-                        });
-                        console.log('Existing code resent successfully');
-                        return { success: true, code: existingCode.code };
-                    }
-                }
-                else {
-                    // Si aucun code existant n'est trouvé, créer un nouveau code
-                    const code = yield this.createCode(parent.email);
-                    yield this.transporter.sendMail({
-                        from: 'hello@edidact.ch',
-                        to: email,
-                        subject: 'Reset Password',
-                        html: `<p>Your reset code is: ${code}</p>`,
-                    });
-                    console.log('Code sent successfully');
-                    return { success: true, code: code };
-                }
-            }
-            catch (error) {
-                console.error('Error resending email:', error);
                 throw error;
             }
         });
@@ -218,7 +269,9 @@ exports.MailService = MailService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(Codes_entity_1.Codes)),
     __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
+    __param(2, (0, typeorm_1.InjectRepository)(admin_entity_1.Admin)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], MailService);
 //# sourceMappingURL=mail.service.js.map

@@ -10,11 +10,17 @@ export class MailController {
   @Post('forgotPassword')
   async forgotPassword(@Body('email') email: string) {
     try {
-      const result = await this.mailService.forgotPassword(email);
-      return {
-        message: ' email sent successfully',
-        result,
-      };
+      const todayCodesCount =
+        await this.mailService.getUserCodeCountToday(email);
+
+      if (todayCodesCount > 2) {
+        return {
+          success: false,
+          message: 'User has received three codes today',
+        };
+      } else {
+        return await this.mailService.forgotPassword(email);
+      }
     } catch (error) {
       return {
         message: 'Failed to send password reset email',
@@ -61,8 +67,17 @@ export class MailController {
   @Post('resend-code')
   async resendCode(@Body('email') email: string) {
     try {
-      const result = await this.mailService.resendCode(email);
-      return { success: true, code: result.code };
+      const todayCodesCount =
+        await this.mailService.getUserCodeCountToday(email);
+
+      if (todayCodesCount > 2) {
+        return {
+          success: false,
+          message: 'User has received three codes today',
+        };
+      } else {
+        return await this.mailService.resendCode(email);
+      }
     } catch (error) {
       return { success: false, message: error.message };
     }

@@ -32,11 +32,16 @@ let MailController = class MailController {
     forgotPassword(email) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const result = yield this.mailService.forgotPassword(email);
-                return {
-                    message: ' email sent successfully',
-                    result,
-                };
+                const todayCodesCount = yield this.mailService.getUserCodeCountToday(email);
+                if (todayCodesCount > 2) {
+                    return {
+                        success: false,
+                        message: 'User has received three codes today',
+                    };
+                }
+                else {
+                    return yield this.mailService.forgotPassword(email);
+                }
             }
             catch (error) {
                 return {
@@ -84,8 +89,16 @@ let MailController = class MailController {
     resendCode(email) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const result = yield this.mailService.resendCode(email);
-                return { success: true, code: result.code };
+                const todayCodesCount = yield this.mailService.getUserCodeCountToday(email);
+                if (todayCodesCount > 2) {
+                    return {
+                        success: false,
+                        message: 'User has received three codes today',
+                    };
+                }
+                else {
+                    return yield this.mailService.resendCode(email);
+                }
             }
             catch (error) {
                 return { success: false, message: error.message };
