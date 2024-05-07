@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Childs } from '../../childs/entities/childs.entity';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Back_pack } from '../../back-pack/entities/back_pack.entity';
 
 @Entity()
@@ -27,10 +20,6 @@ export class Exercises {
 
   @Column({ type: 'text' })
   assignment: string;
-
-  @ManyToMany(() => Childs, (childs) => childs.exercises, { cascade: true })
-  @JoinTable()
-  childs: Childs[];
 
   @ManyToMany(() => Back_pack, (backpack) => backpack.exercises, {
     cascade: true,

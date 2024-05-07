@@ -25,13 +25,24 @@ exports.MailController = void 0;
 const common_1 = require("@nestjs/common");
 const mail_service_1 = require("./mail.service");
 const public_decorator_1 = require("../auth/decorators/public.decorator");
+const typeorm_1 = require("@nestjs/typeorm");
+const parents_entity_1 = require("../parents/entities/parents.entity");
+const typeorm_2 = require("typeorm");
+const admin_entity_1 = require("../admin/entities/admin.entity");
 let MailController = class MailController {
-    constructor(mailService) {
+    constructor(mailService, parentRepository, adminRepository) {
         this.mailService = mailService;
+        this.parentRepository = parentRepository;
+        this.adminRepository = adminRepository;
     }
     forgotPassword(email) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                const user = (yield this.parentRepository.findOne({ where: { email } })) ||
+                    (yield this.adminRepository.findOne({ where: { email } }));
+                if (!user) {
+                    return { message: false, error: 'User with this email does not exist' };
+                }
                 const todayCodesCount = yield this.mailService.getUserCodeCountToday(email);
                 if (todayCodesCount > 2) {
                     return {
@@ -141,6 +152,10 @@ __decorate([
 ], MailController.prototype, "resendCode", null);
 exports.MailController = MailController = __decorate([
     (0, common_1.Controller)('mailer'),
-    __metadata("design:paramtypes", [mail_service_1.MailService])
+    __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
+    __param(2, (0, typeorm_1.InjectRepository)(admin_entity_1.Admin)),
+    __metadata("design:paramtypes", [mail_service_1.MailService,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
 ], MailController);
 //# sourceMappingURL=mail.controller.js.map

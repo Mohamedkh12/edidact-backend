@@ -42,13 +42,14 @@ let ParentsService = class ParentsService {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const roleId = parseInt(createPrentDto.roleId.toString(), 10);
+                // Vérifier si un parent avec la même adresse e-mail existe déjà
                 const existingParent = yield this.parentsRepository.findOne({
-                    where: { username: createPrentDto.username },
+                    where: { email: createPrentDto.email },
                 });
                 if (existingParent) {
-                    throw new common_1.BadRequestException('Parent with the same username already exists');
+                    throw new common_1.BadRequestException('Un parent avec la même adresse e-mail existe déjà');
                 }
-                // Vérifiez si le rôle existe
+                // Vérifier si le rôle existe
                 const role = yield this.rolesRepository.findOne({
                     where: { id: roleId },
                 });
@@ -57,8 +58,9 @@ let ParentsService = class ParentsService {
                 }
                 const hashedPassword = yield bcrypt.hash(createPrentDto.password, 10);
                 const parent = yield this.parentsRepository.save(Object.assign(Object.assign({}, createPrentDto), { password: hashedPassword, roleId, roles: role }));
+                console.log('parent:', parent);
                 const payload = {
-                    username: parent.username,
+                    email: parent.email,
                     sub: parent.id,
                     roleName: role.name,
                 };
@@ -102,20 +104,18 @@ let ParentsService = class ParentsService {
     createChildOrChildren(createChildrenDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log('createChildrenDto:', createChildrenDto);
                 const childrenToCreate = Array.isArray(createChildrenDto)
                     ? createChildrenDto
                     : [createChildrenDto];
                 const promises = childrenToCreate.map((createChildDto) => __awaiter(this, void 0, void 0, function* () {
-                    const existingChild = yield this.childRepository.findOne({
-                        where: { username: createChildDto.username },
-                    });
                     const parent = yield this.parentsRepository.findOne({
                         where: { id: createChildDto.id_parent },
                     });
                     if (!parent) {
                         throw new common_1.NotFoundException(`Parent with ID ${createChildDto.id_parent} not found`);
                     }
-                    const child = new parents_entity_1.Childs();
+                    const child = new parents_entity_1.Children();
                     child.username = createChildDto.username;
                     child.password = createChildDto.password;
                     child.classe = createChildDto.classe;
@@ -126,6 +126,7 @@ let ParentsService = class ParentsService {
                     if (image) {
                         child.image = image.buffer.toString('base64');
                     }
+                    console.log(child);
                     return this.childRepository.save(child);
                 }));
                 return yield Promise.all(promises);
@@ -164,8 +165,7 @@ let ParentsService = class ParentsService {
             });
         });
     }
-    updateChild(id, updateChildDto, // Utilisez le bon DTO ici
-    image) {
+    updateChild(id, updateChildDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
             const child = yield this.childRepository.findOne({ where: { id: id } });
             if (!child) {
@@ -284,7 +284,7 @@ let ParentsService = class ParentsService {
 exports.ParentsService = ParentsService;
 exports.ParentsService = ParentsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(parents_entity_1.Childs)),
+    __param(0, (0, typeorm_1.InjectRepository)(parents_entity_1.Children)),
     __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
     __param(2, (0, typeorm_1.InjectRepository)(roles_entity_1.Roles)),
     __metadata("design:paramtypes", [typeorm_2.Repository,

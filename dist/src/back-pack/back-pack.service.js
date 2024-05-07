@@ -71,6 +71,11 @@ let BackPackService = class BackPackService {
             }
             // Filtrer et mettre à jour la liste des exercices dans le backPack
             backPack.exercises = backPack.exercises.filter((exercise) => exercise.id !== exerciseId);
+            yield this.backPackRepository
+                .createQueryBuilder()
+                .relation(back_pack_entity_1.Back_pack, 'exercises')
+                .of(backPack)
+                .remove(exerciseId);
             // Sauvegarder les changements dans le backPack
             yield this.backPackRepository.save(backPack);
             // Supprimer l'entrée de jointure entre l'exercice et le backPack
@@ -80,6 +85,7 @@ let BackPackService = class BackPackService {
                 .of(backPack)
                 .remove(exerciseId);
             console.log(backPack);
+            return backPack;
         });
     }
     getBackPackByParent(parentId) {

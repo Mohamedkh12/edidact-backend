@@ -13,6 +13,7 @@ import { CreateBackpackDto } from './dto/create-backpack.dto';
 import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { RolesGuard } from '../roles/guards/rôles.guard';
 import { Roles } from '../roles/decorators/roles.decorator';
+import { Back_pack } from './entities/back_pack.entity';
 
 @Controller('backpack')
 export class BackPackController {
@@ -31,8 +32,8 @@ export class BackPackController {
   async removeFromBackPack(
     @Query('idBackPack') idBackPack: number,
     @Query('idExercise') idExercise: number,
-  ): Promise<void> {
-    await this.backPackService.removeExerciseFromBackpack(
+  ): Promise<Back_pack> {
+    return await this.backPackService.removeExerciseFromBackpack(
       idBackPack,
       idExercise,
     );

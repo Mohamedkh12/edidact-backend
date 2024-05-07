@@ -1,5 +1,4 @@
 import {
-  Column,
   Entity,
   JoinColumn,
   JoinTable,
@@ -10,7 +9,8 @@ import {
   Unique,
 } from 'typeorm';
 import { Exercises } from '../../exercises/entities/exercises.entity';
-import { Childs, Parents } from '../../parents/entities/parents.entity';
+import { Parents } from '../../parents/entities/parents.entity';
+import { Children } from '../../childs/entities/childs.entity';
 
 @Entity()
 @Unique(['parent', 'child'])
@@ -22,9 +22,9 @@ export class Back_pack {
   @JoinColumn({ name: 'parent_id' })
   parent: Parents;
 
-  @OneToOne(() => Childs, (child) => child.backpack)
+  @OneToOne(() => Children, (child) => child.backpack, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'child_id' })
-  child: Childs;
+  child: Children;
 
   @ManyToMany(() => Exercises, (exercise) => exercise.backpacks)
   @JoinTable()

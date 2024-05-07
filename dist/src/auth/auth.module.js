@@ -23,15 +23,18 @@ const core_1 = require("@nestjs/core");
 const auth_guard_1 = require("./guards/auth.guard");
 const parents_module_1 = require("../parents/parents.module");
 const childs_module_1 = require("../childs/childs.module");
+const admin_entity_1 = require("../admin/entities/admin.entity");
+const admin_module_1 = require("../admin/admin.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([childs_entity_1.Childs, parents_entity_1.Parents]),
+            typeorm_1.TypeOrmModule.forFeature([childs_entity_1.Children, parents_entity_1.Parents, admin_entity_1.Admin]),
             parents_module_1.ParentsModule,
             childs_module_1.ChildsModule,
+            admin_module_1.AdminModule,
             jwt_1.JwtModule.register({
                 secret: jwtConstants_1.jwtConstants.secret,
                 signOptions: { expiresIn: '60m' },

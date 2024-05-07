@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { Childs, Parents } from '../parents/entities/parents.entity';
+import { Children, Parents } from '../parents/entities/parents.entity';
 import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('admin')
@@ -28,7 +28,7 @@ export class AdminController {
 
   @Public()
   @Get('AllChildren')
-  async findAllChild(): Promise<Childs[]> {
+  async findAllChild(): Promise<Children[]> {
     return await this.adminService.findChildren();
   }
 }

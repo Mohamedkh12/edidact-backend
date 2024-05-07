@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Childs } from '../childs/entities/childs.entity';
+import { Children } from '../childs/entities/childs.entity';
 import { Repository } from 'typeorm';
 import { Parents } from '../parents/entities/parents.entity';
 import { JwtService } from '@nestjs/jwt';
@@ -9,8 +9,8 @@ import { jwtConstants } from '../auth/jwtConstants';
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectRepository(Childs)
-    private childRepository: Repository<Childs>,
+    @InjectRepository(Children)
+    private childRepository: Repository<Children>,
     @InjectRepository(Parents)
     private parentsRepository: Repository<Parents>,
     private jwtService: JwtService,
@@ -54,7 +54,7 @@ export class AdminService {
 
     return false;
   }
-  async findChildren(): Promise<Childs[]> {
+  async findChildren(): Promise<Children[]> {
     return await this.childRepository.find();
   }
   async findAllParent(): Promise<Parents[]> {

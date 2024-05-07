@@ -1,30 +1,27 @@
-import {
-  HttpStatus,
-  Injectable,
-  Req,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Childs } from '../childs/entities/childs.entity';
+import { Children } from '../childs/entities/childs.entity';
 import { Parents } from '../parents/entities/parents.entity';
-import { Request } from 'express';
+import { Admin } from '../admin/entities/admin.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(Childs)
-    private childRepository: Repository<Childs>,
+    @InjectRepository(Children)
+    private childRepository: Repository<Children>,
     @InjectRepository(Parents)
     private parentRepository: Repository<Parents>,
+    @InjectRepository(Admin)
+    private adminRepository: Repository<Admin>,
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<any> {
     // Vérifiez si l'utilisateur existe dans la table des parents
-    const parent = await this.parentRepository.findOne({ where: { username } });
+    const parent = await this.parentRepository.findOne({ where: { email } });
 
     if (parent && (await bcrypt.compare(password, parent.password))) {
       const { password, ...result } = parent;
@@ -32,57 +29,72 @@ export class AuthService {
     }
 
     // Vérifiez si l'utilisateur existe dans la table des enfants
-    const child = await this.childRepository.findOne({ where: { username } });
+    const child = await this.childRepository.findOne({ where: { email } });
 
     if (child && (await bcrypt.compare(password, child.password))) {
       const { password, ...result } = child;
       return result;
     }
+    const admin = await this.adminRepository.findOne({ where: { email } });
 
-    // Si ni le parent ni l'enfant n'est trouvé, retournez null
+    if (admin && (await bcrypt.compare(password, admin.password))) {
+      const { password, ...result } = admin;
+      return result;
+    }
+
+    // Si ni le parent ni l'enfant ni l'admin n'est trouvé, retournez null
     return null;
   }
 
   async signIn(
-    username: string,
+    email: string,
     password: string,
-  ): Promise<{ access_token: string; user: Childs | Parents }> {
+  ): Promise<{ access_token: string; user: Children | Parents | Admin }> {
     const parent = await this.parentRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.roles', 'roles')
-      .where('user.username = :username', { username })
+      .createQueryBuilder('Parents')
+      .leftJoinAndSelect('Parents.roles', 'roles')
+      .where('Parents.email = :email', { email })
       .addSelect('roles.name')
       .getOne();
-
+    console.log('parent:', parent);
     let child = null;
 
     if (!parent) {
       child = await this.childRepository
         .createQueryBuilder('child')
-        .leftJoinAndSelect('child.roles', 'roles') // Ajoutez cette ligne pour récupérer les rôles de l'enfant
-        .where('child.username = :username', { username })
+        .leftJoinAndSelect('child.roles', 'roles')
+        .where('child.email = :email', { email })
         .addSelect('roles.name')
         .getOne();
     }
 
-    if (!parent && !child) {
-      throw new UnauthorizedException('Invalid username or password');
+    const admin = await this.adminRepository
+      .createQueryBuilder('admin')
+      .leftJoinAndSelect('admin.roles', 'roles')
+      .where('admin.email = :email', { email })
+      .addSelect('roles.name')
+      .getOne();
+
+    if (!parent && !child && !admin) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    const entity = parent || child;
+    const entity = parent || child || admin;
 
     const isPasswordValid = await bcrypt.compare(password, entity.password);
 
+    console.log('entity:', entity);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid username or password');
     }
 
     const payload = {
-      username: entity.username,
+      email: entity.email,
+      password: entity.password,
       sub: entity.id,
       roleName: entity.roles ? entity.roles.name : null,
     };
-
+    console.log('payload:', payload);
     const accessToken = this.jwtService.sign(payload);
 
     return { access_token: accessToken, user: entity };
@@ -93,7 +105,7 @@ export class AuthService {
       const decoded = this.jwtService.verify(refreshToken);
 
       const payload = {
-        username: decoded.username,
+        email: decoded.email,
         sub: decoded.sub,
         roleName: decoded.roleName,
       };

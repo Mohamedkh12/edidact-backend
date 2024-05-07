@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Exercises = void 0;
 const typeorm_1 = require("typeorm");
-const childs_entity_1 = require("../../childs/entities/childs.entity");
 const back_pack_entity_1 = require("../../back-pack/entities/back_pack.entity");
 let Exercises = class Exercises {
 };
@@ -40,11 +39,6 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
 ], Exercises.prototype, "assignment", void 0);
-__decorate([
-    (0, typeorm_1.ManyToMany)(() => childs_entity_1.Childs, (childs) => childs.exercises, { cascade: true }),
-    (0, typeorm_1.JoinTable)(),
-    __metadata("design:type", Array)
-], Exercises.prototype, "childs", void 0);
 __decorate([
     (0, typeorm_1.ManyToMany)(() => back_pack_entity_1.Back_pack, (backpack) => backpack.exercises, {
         cascade: true,

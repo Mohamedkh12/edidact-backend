@@ -53,14 +53,19 @@ let JwtRefreshTokenStrategy = class JwtRefreshTokenStrategy extends (0, passport
             if (!user) {
                 throw new common_1.UnauthorizedException();
             }
-            return { sub: payload.id, username: payload.username, roleName: payload.roleName };
+            return {
+                sub: payload.id,
+                email: payload.email,
+                password: payload.password,
+                roleName: payload.roleName,
+            };
         });
     }
 };
 exports.JwtRefreshTokenStrategy = JwtRefreshTokenStrategy;
 exports.JwtRefreshTokenStrategy = JwtRefreshTokenStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(childs_entity_1.Childs)),
+    __param(0, (0, typeorm_1.InjectRepository)(childs_entity_1.Children)),
     __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository])

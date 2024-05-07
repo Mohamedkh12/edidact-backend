@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateChildDto, UpdateChildDto } from '../childs/dto/create-child';
-import { Childs, Parents } from './entities/parents.entity';
+import { Children, Parents } from './entities/parents.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePrentDto } from './dto/create-Parent.dto';
@@ -18,8 +18,8 @@ import * as dns from 'dns';
 @Injectable()
 export class ParentsService {
   constructor(
-    @InjectRepository(Childs)
-    private childRepository: Repository<Childs>,
+    @InjectRepository(Children)
+    private childRepository: Repository<Children>,
     @InjectRepository(Parents)
     private parentsRepository: Repository<Parents>,
     @InjectRepository(Roles)
@@ -40,16 +40,18 @@ export class ParentsService {
   }> {
     try {
       const roleId = parseInt(createPrentDto.roleId.toString(), 10);
-      const existingParent = await this.parentsRepository.findOne({
-        where: { username: createPrentDto.username },
-      });
 
+      // Vérifier si un parent avec la même adresse e-mail existe déjà
+      const existingParent = await this.parentsRepository.findOne({
+        where: { email: createPrentDto.email },
+      });
       if (existingParent) {
         throw new BadRequestException(
-          'Parent with the same username already exists',
+          'Un parent avec la même adresse e-mail existe déjà',
         );
       }
-      // Vérifiez si le rôle existe
+
+      // Vérifier si le rôle existe
       const role = await this.rolesRepository.findOne({
         where: { id: roleId },
       });
@@ -57,6 +59,7 @@ export class ParentsService {
       if (!role) {
         throw new NotFoundException(`Rôle avec l'ID ${roleId} non trouvé`);
       }
+
       const hashedPassword = await bcrypt.hash(createPrentDto.password, 10);
       const parent = await this.parentsRepository.save({
         ...createPrentDto,
@@ -64,8 +67,9 @@ export class ParentsService {
         roleId,
         roles: role,
       });
+      console.log('parent:', parent);
       const payload = {
-        username: parent.username,
+        email: parent.email,
         sub: parent.id,
         roleName: role.name,
       };
@@ -84,6 +88,7 @@ export class ParentsService {
       throw new BadRequestException(error.message);
     }
   }
+
   async verifyEmail(email: string): Promise<boolean> {
     // Vérification de l'email avec une expression régulière
     const emailRegex = /^\S+@\S+$/i;
@@ -108,8 +113,9 @@ export class ParentsService {
   async createChildOrChildren(
     createChildrenDto: CreateChildDto | CreateChildDto[],
     image: Express.Multer.File,
-  ): Promise<Awaited<Childs | Childs>[]> {
+  ): Promise<Awaited<Children | Children>[]> {
     try {
+      console.log('createChildrenDto:', createChildrenDto);
       const childrenToCreate: CreateChildDto[] = Array.isArray(
         createChildrenDto,
       )
@@ -117,10 +123,6 @@ export class ParentsService {
         : [createChildrenDto];
 
       const promises = childrenToCreate.map(async (createChildDto) => {
-        const existingChild = await this.childRepository.findOne({
-          where: { username: createChildDto.username },
-        });
-
         const parent = await this.parentsRepository.findOne({
           where: { id: createChildDto.id_parent },
         });
@@ -130,7 +132,7 @@ export class ParentsService {
           );
         }
 
-        const child = new Childs();
+        const child = new Children();
         child.username = createChildDto.username;
         child.password = createChildDto.password;
         child.classe = createChildDto.classe;
@@ -141,6 +143,7 @@ export class ParentsService {
         if (image) {
           child.image = image.buffer.toString('base64');
         }
+        console.log(child);
         return this.childRepository.save(child);
       });
 
@@ -161,14 +164,14 @@ export class ParentsService {
       });
     }
   }
-  async findOneChild(idOrUsername: number): Promise<Childs | undefined> {
+  async findOneChild(idOrUsername: number): Promise<Children | undefined> {
     const child = this.childRepository.findOne({
       where: { id: idOrUsername },
     });
     return child;
   }
 
-  async findAllChildren(parentId: number): Promise<Childs[]> {
+  async findAllChildren(parentId: number): Promise<Children[]> {
     return await this.childRepository.find({
       where: { parents: { id: parentId } },
     });
@@ -176,7 +179,7 @@ export class ParentsService {
 
   async updateChild(
     id: number,
-    updateChildDto: UpdateChildDto, // Utilisez le bon DTO ici
+    updateChildDto: UpdateChildDto,
     image: Express.Multer.File,
   ) {
     const child = await this.childRepository.findOne({ where: { id: id } });
@@ -262,7 +265,7 @@ export class ParentsService {
     }
 
     // Extract child names from the parent entity
-    const childNames = parent.childs.map((child: Childs) => child.username);
+    const childNames = parent.childs.map((child: Children) => child.username);
 
     return childNames;
   }
@@ -278,14 +281,14 @@ export class ParentsService {
     }
 
     // Extract child names from the parent entity
-    const childId = parent.childs.map((child: Childs) => child.id);
+    const childId = parent.childs.map((child: Children) => child.id);
 
     return childId;
   }
 
   async findChildByUsername(
     username: string,
-  ): Promise<{ found: boolean; child?: Childs }> {
+  ): Promise<{ found: boolean; child?: Children }> {
     try {
       const child = await this.childRepository.findOne({
         where: { username },

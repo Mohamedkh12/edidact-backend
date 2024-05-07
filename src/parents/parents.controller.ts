@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { ParentsService } from './parents.service';
 import { CreateChildDto, UpdateChildDto } from '../childs/dto/create-child';
-import { Childs, Parents } from './entities/parents.entity';
+import { Children, Parents } from './entities/parents.entity';
 import { CreatePrentDto } from './dto/create-Parent.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
@@ -49,7 +49,7 @@ export class ParentsController {
   @UseGuards(JwtAuthGuards, RolesGuard)
   @Roles('Parent')
   @Get('findChild/:id')
-  async findChild(@Param('id') id: number): Promise<Childs | undefined> {
+  async findChild(@Param('id') id: number): Promise<Children | undefined> {
     return await this.parentsService.findOneChild(id);
   }
 
@@ -58,28 +58,25 @@ export class ParentsController {
   @Get('findChildren/:parentId')
   async findAllChildren(
     @Param('parentId') parentId: number,
-  ): Promise<Childs[]> {
+  ): Promise<Children[]> {
     return await this.parentsService.findAllChildren(parentId);
   }
 
   @Public()
   @Post('createChildren')
   @UseInterceptors(FileInterceptor('image'))
-  async createChildren(
+  async createChildOrChildren(
     @Body() createChildrenDto: CreateChildDto | CreateChildDto[],
-    @UploadedFile() image,
-  ): Promise<Awaited<Childs | Childs>[]> {
+    @UploadedFile() image: Express.Multer.File,
+  ): Promise<{ status: boolean; child: Awaited<Children | Children>[] }> {
     try {
       const createdChildren = await this.parentsService.createChildOrChildren(
         createChildrenDto,
         image,
       );
-      return createdChildren;
+      return { status: true, child: createdChildren };
     } catch (error) {
-      console.error('Erreur lors de la création :', error);
-      throw new UnauthorizedException(
-        "Erreur lors de la création de l'enfant.",
-      );
+      throw error;
     }
   }
 
@@ -87,7 +84,7 @@ export class ParentsController {
   @Get('findChildByUsername/:username')
   async findChildByUsername(
     @Param('username') username: string,
-  ): Promise<{ found: boolean; child?: Childs }> {
+  ): Promise<{ found: boolean; child?: Children }> {
     return await this.parentsService.findChildByUsername(username);
   }
   @UseGuards(JwtAuthGuards, RolesGuard)

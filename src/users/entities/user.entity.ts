@@ -14,7 +14,6 @@ import { Roles } from '../../roles/entities/roles.entity';
 import { Exercises } from '../../exercises/entities/exercises.entity';
 
 @Entity('users')
-@Unique(['username', 'email'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;

@@ -60,15 +60,14 @@ let ParentsController = class ParentsController {
             return yield this.parentsService.findAllChildren(parentId);
         });
     }
-    createChildren(createChildrenDto, image) {
+    createChildOrChildren(createChildrenDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const createdChildren = yield this.parentsService.createChildOrChildren(createChildrenDto, image);
-                return createdChildren;
+                return { status: true, child: createdChildren };
             }
             catch (error) {
-                console.error('Erreur lors de la création :', error);
-                throw new common_1.UnauthorizedException("Erreur lors de la création de l'enfant.");
+                throw error;
             }
         });
     }
@@ -166,7 +165,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], ParentsController.prototype, "createChildren", null);
+], ParentsController.prototype, "createChildOrChildren", null);
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Get)('findChildByUsername/:username'),
