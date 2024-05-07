@@ -3,7 +3,7 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { jwtConstants } from '../jwtConstants';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Childs } from '../../childs/entities/childs.entity';
+import { Children } from '../../childs/entities/childs.entity';
 import { Repository } from 'typeorm';
 import { Parents } from '../../parents/entities/parents.entity';
 
@@ -13,8 +13,8 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   'jwt-refresh-token',
 ) {
   constructor(
-    @InjectRepository(Childs)
-    private childRepository: Repository<Childs>,
+    @InjectRepository(Children)
+    private childRepository: Repository<Children>,
     @InjectRepository(Parents)
     private parentRepository: Repository<Parents>,
   ) {
@@ -37,6 +37,11 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     if (!user) {
       throw new UnauthorizedException();
     }
-    return { sub: payload.id, username: payload.username, roleName: payload.roleName };
+    return {
+      sub: payload.id,
+      email: payload.email,
+      password: payload.password,
+      roleName: payload.roleName,
+    };
   }
 }

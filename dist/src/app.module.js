@@ -33,13 +33,12 @@ const core_1 = require("@nestjs/core");
 const r_les_guard_1 = require("./roles/guards/r\u00F4les.guard");
 const exercises_service_1 = require("./exercises/exercises.service");
 const passport_1 = require("@nestjs/passport");
-const enregistreur_middleware_1 = require("./auth/middleware/enregistreur.middleware");
 const mail_module_1 = require("./mail/mail.module");
 const database_configue_1 = require("../database.configue");
 const admin_service_1 = require("./admin/admin.service");
 let AppModule = class AppModule {
     configure(consumer) {
-        consumer.apply(enregistreur_middleware_1.CheckUserIdMiddleware).forRoutes('users/update/:id');
+        //consumer.apply(CheckUserIdMiddleware).forRoutes('parents/updateChild/:id');
     }
 };
 exports.AppModule = AppModule;

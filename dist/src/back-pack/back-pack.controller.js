@@ -37,7 +37,7 @@ let BackPackController = class BackPackController {
     }
     removeFromBackPack(idBackPack, idExercise) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.backPackService.removeExerciseFromBackpack(idBackPack, idExercise);
+            return yield this.backPackService.removeExerciseFromBackpack(idBackPack, idExercise);
         });
     }
     getBackPackByParent(id) {

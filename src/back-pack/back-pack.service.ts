@@ -58,7 +58,7 @@ export class BackPackService {
   async removeExerciseFromBackpack(
     backPackId: number,
     exerciseId: number,
-  ): Promise<void> {
+  ): Promise<Back_pack> {
     // Trouver le backPack associé à l'exercice
     const backPack = await this.backPackRepository.findOne({
       relations: ['exercises'], // Assurez-vous que vous avez cette relation dans votre entité
@@ -73,7 +73,11 @@ export class BackPackService {
     backPack.exercises = backPack.exercises.filter(
       (exercise) => exercise.id !== exerciseId,
     );
-
+    await this.backPackRepository
+      .createQueryBuilder()
+      .relation(Back_pack, 'exercises')
+      .of(backPack)
+      .remove(exerciseId);
     // Sauvegarder les changements dans le backPack
     await this.backPackRepository.save(backPack);
 
@@ -83,8 +87,8 @@ export class BackPackService {
       .relation(Back_pack, 'exercises')
       .of(backPack)
       .remove(exerciseId);
-
-    console.log(backPack);
+    console.log(backPack)
+    return backPack
   }
 
   async getBackPackByParent(parentId: number): Promise<Back_pack[]> {

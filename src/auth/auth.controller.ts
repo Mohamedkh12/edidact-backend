@@ -6,13 +6,11 @@ import {
   Get,
   Headers,
   Req,
-  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { JwtRefreshTokenStrategy } from './strategy/refreshToken.strategy';
-import { JwtAuthGuards } from './strategy/jwt-auth.guards';
-import { Request } from 'express';
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -22,8 +20,8 @@ export class AuthController {
   async signIn(
     @Body() signInDto: Record<string, any>,
   ): Promise<{ access_token: string }> {
-    const { username, password } = signInDto;
-    return await this.authService.signIn(username, password);
+    const { email, password } = signInDto;
+    return await this.authService.signIn(email, password);
   }
   @UseGuards(JwtRefreshTokenStrategy)
   @Post('refreshToken')

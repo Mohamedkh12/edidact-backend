@@ -26,11 +26,9 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const exercises_entity_1 = require("./entities/exercises.entity");
-const childs_entity_1 = require("../childs/entities/childs.entity");
 let ExercisesService = class ExercisesService {
-    constructor(exercisesRepository, childsRepository) {
+    constructor(exercisesRepository) {
         this.exercisesRepository = exercisesRepository;
-        this.childsRepository = childsRepository;
     }
     getAllExercises() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -59,15 +57,11 @@ let ExercisesService = class ExercisesService {
             if (existingExercise) {
                 throw new common_1.NotFoundException('Exercise already exists');
             }
-            const child = yield this.childsRepository.findOne({
-                where: { id: createExerciseDto.ChildId },
-            });
             const newExercise = new exercises_entity_1.Exercises();
             newExercise.name = createExerciseDto.name;
             newExercise.assignment = createExerciseDto.assignment;
             newExercise.category = createExerciseDto.category;
             newExercise.description = createExerciseDto.description;
-            newExercise.childs = [child];
             if (image) {
                 newExercise.image = image.buffer.toString('base64');
             }
@@ -109,18 +103,10 @@ let ExercisesService = class ExercisesService {
             // Trouver l'exercice par ID
             const exercise = yield this.exercisesRepository.findOne({
                 where: { id },
-                relations: ['childs'],
+                relations: ['Children'],
             });
             if (!exercise) {
                 throw new Error('Exercise not found');
-            }
-            // Supprimer les relations entre l'exercice et les enfants
-            for (const child of exercise.childs) {
-                yield this.exercisesRepository
-                    .createQueryBuilder()
-                    .relation(exercises_entity_1.Exercises, 'childs')
-                    .of(exercise)
-                    .remove(child.id);
             }
             // Maintenant, vous pouvez supprimer l'exercice
             yield this.exercisesRepository.remove(exercise);
@@ -166,7 +152,7 @@ let ExercisesService = class ExercisesService {
             try {
                 const results = yield this.exercisesRepository
                     .createQueryBuilder('exercise')
-                    .innerJoinAndSelect('exercise.childs', 'child')
+                    .innerJoinAndSelect('exercise.Children', 'child')
                     .where('child.classe = :classe', { classe })
                     .select(['child.classe AS class', 'exercise.category AS category'])
                     .groupBy('child.classe, exercise.category')
@@ -192,8 +178,6 @@ exports.ExercisesService = ExercisesService;
 exports.ExercisesService = ExercisesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(exercises_entity_1.Exercises)),
-    __param(1, (0, typeorm_1.InjectRepository)(childs_entity_1.Childs)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], ExercisesService);
 //# sourceMappingURL=exercises.service.js.map

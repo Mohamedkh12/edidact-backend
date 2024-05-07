@@ -13,6 +13,7 @@ exports.Back_pack = void 0;
 const typeorm_1 = require("typeorm");
 const exercises_entity_1 = require("../../exercises/entities/exercises.entity");
 const parents_entity_1 = require("../../parents/entities/parents.entity");
+const childs_entity_1 = require("../../childs/entities/childs.entity");
 let Back_pack = class Back_pack {
 };
 exports.Back_pack = Back_pack;
@@ -26,9 +27,9 @@ __decorate([
     __metadata("design:type", parents_entity_1.Parents)
 ], Back_pack.prototype, "parent", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => parents_entity_1.Childs, (child) => child.backpack),
+    (0, typeorm_1.OneToOne)(() => childs_entity_1.Children, (child) => child.backpack, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'child_id' }),
-    __metadata("design:type", parents_entity_1.Childs)
+    __metadata("design:type", childs_entity_1.Children)
 ], Back_pack.prototype, "child", void 0);
 __decorate([
     (0, typeorm_1.ManyToMany)(() => exercises_entity_1.Exercises, (exercise) => exercise.backpacks),

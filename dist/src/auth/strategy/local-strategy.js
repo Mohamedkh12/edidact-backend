@@ -28,9 +28,9 @@ let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)
         super();
         this.authService = authService;
     }
-    validate(username, password) {
+    validate(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.authService.validateUser(username, password);
+            const user = yield this.authService.validateUser(email, password);
             if (!user) {
                 throw new common_1.UnauthorizedException();
             }

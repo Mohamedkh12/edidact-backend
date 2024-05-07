@@ -32,8 +32,8 @@ let AuthController = class AuthController {
     }
     signIn(signInDto) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { username, password } = signInDto;
-            return yield this.authService.signIn(username, password);
+            const { email, password } = signInDto;
+            return yield this.authService.signIn(email, password);
         });
     }
     refreshToken(refreshToken) {

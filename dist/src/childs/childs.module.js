@@ -17,7 +17,7 @@ let ChildsModule = class ChildsModule {
 exports.ChildsModule = ChildsModule;
 exports.ChildsModule = ChildsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([childs_entity_1.Childs])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([childs_entity_1.Children])],
         controllers: [childs_controller_1.ChildsController],
         providers: [childs_service_1.ChildsService],
         exports: [typeorm_1.TypeOrmModule, childs_service_1.ChildsService],

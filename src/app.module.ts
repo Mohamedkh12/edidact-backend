@@ -68,6 +68,6 @@ import { AdminService } from './admin/admin.service';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CheckUserIdMiddleware).forRoutes('users/update/:id');
+    //consumer.apply(CheckUserIdMiddleware).forRoutes('parents/updateChild/:id');
   }
 }

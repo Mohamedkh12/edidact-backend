@@ -1,15 +1,33 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { Public } from '../auth/decorators/public.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Parents } from '../parents/entities/parents.entity';
+import { Repository } from 'typeorm';
+import { Admin } from '../admin/entities/admin.entity';
 
 @Controller('mailer')
 export class MailController {
-  constructor(private readonly mailService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    @InjectRepository(Parents)
+    private parentRepository: Repository<Parents>,
+    @InjectRepository(Admin)
+    private adminRepository: Repository<Admin>,
+  ) {}
 
   @Public()
   @Post('forgotPassword')
   async forgotPassword(@Body('email') email: string) {
     try {
+      const user =
+        (await this.parentRepository.findOne({ where: { email } })) ||
+        (await this.adminRepository.findOne({ where: { email } }));
+
+      if (!user) {
+        return { message: false, error: 'User with this email does not exist' };
+      }
+
       const todayCodesCount =
         await this.mailService.getUserCodeCountToday(email);
 

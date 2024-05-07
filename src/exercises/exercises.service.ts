@@ -3,15 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Exercises } from './entities/exercises.entity';
 import { CreateExerciseDto } from './dto/create-exercice.dto';
-import { Childs } from '../childs/entities/childs.entity';
 
 @Injectable()
 export class ExercisesService {
   constructor(
     @InjectRepository(Exercises)
     private readonly exercisesRepository: Repository<Exercises>,
-    @InjectRepository(Childs)
-    private childsRepository: Repository<Childs>,
   ) {}
 
   async getAllExercises(): Promise<Exercises[]> {
@@ -44,16 +41,11 @@ export class ExercisesService {
       throw new NotFoundException('Exercise already exists');
     }
 
-    const child = await this.childsRepository.findOne({
-      where: { id: createExerciseDto.ChildId },
-    });
-
     const newExercise = new Exercises();
     newExercise.name = createExerciseDto.name;
     newExercise.assignment = createExerciseDto.assignment;
     newExercise.category = createExerciseDto.category;
     newExercise.description = createExerciseDto.description;
-    newExercise.childs = [child];
     if (image) {
       newExercise.image = image.buffer.toString('base64');
     }
@@ -95,20 +87,11 @@ export class ExercisesService {
     // Trouver l'exercice par ID
     const exercise = await this.exercisesRepository.findOne({
       where: { id },
-      relations: ['childs'],
+      relations: ['Children'],
     });
 
     if (!exercise) {
       throw new Error('Exercise not found');
-    }
-
-    // Supprimer les relations entre l'exercice et les enfants
-    for (const child of exercise.childs) {
-      await this.exercisesRepository
-        .createQueryBuilder()
-        .relation(Exercises, 'childs')
-        .of(exercise)
-        .remove(child.id);
     }
 
     // Maintenant, vous pouvez supprimer l'exercice
@@ -153,7 +136,7 @@ export class ExercisesService {
     try {
       const results = await this.exercisesRepository
         .createQueryBuilder('exercise')
-        .innerJoinAndSelect('exercise.childs', 'child')
+        .innerJoinAndSelect('exercise.Children', 'child')
         .where('child.classe = :classe', { classe })
         .select(['child.classe AS class', 'exercise.category AS category'])
         .groupBy('child.classe, exercise.category')

@@ -62,7 +62,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], User.prototype, "hashPassword", null);
 exports.User = User = __decorate([
-    (0, typeorm_1.Entity)('users'),
-    (0, typeorm_1.Unique)(['username', 'email'])
+    (0, typeorm_1.Entity)('users')
 ], User);
 //# sourceMappingURL=user.entity.js.map

@@ -17,10 +17,7 @@ export class CreatePrentDto {
   tel: number;
   @IsNumber()
   roleId: number;
-  @BeforeInsert()
-  async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
+
 }
 
 export class UpdateUserDto extends PartialType(CreatePrentDto) {}

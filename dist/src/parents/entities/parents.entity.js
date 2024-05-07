@@ -9,11 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Childs = exports.Parents = void 0;
+exports.Children = exports.Parents = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const childs_entity_1 = require("../../childs/entities/childs.entity");
-Object.defineProperty(exports, "Childs", { enumerable: true, get: function () { return childs_entity_1.Childs; } });
+Object.defineProperty(exports, "Children", { enumerable: true, get: function () { return childs_entity_1.Children; } });
 const back_pack_entity_1 = require("../../back-pack/entities/back_pack.entity");
 const Codes_entity_1 = require("../../mail/PasswordRestCode/entite/Codes.entity");
 let Parents = class Parents extends user_entity_1.User {
@@ -24,7 +24,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Parents.prototype, "tel", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => childs_entity_1.Childs, (childs) => childs.parents),
+    (0, typeorm_1.OneToMany)(() => childs_entity_1.Children, (Children) => Children.parents, { cascade: true }),
     __metadata("design:type", Array)
 ], Parents.prototype, "childs", void 0);
 __decorate([

@@ -9,38 +9,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Childs = void 0;
+exports.Children = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const parents_entity_1 = require("../../parents/entities/parents.entity");
-const exercises_entity_1 = require("../../exercises/entities/exercises.entity");
 const back_pack_entity_1 = require("../../back-pack/entities/back_pack.entity");
-let Childs = class Childs extends user_entity_1.User {
+let Children = class Children extends user_entity_1.User {
 };
-exports.Childs = Childs;
+exports.Children = Children;
 __decorate([
     (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
-], Childs.prototype, "classe", void 0);
+], Children.prototype, "classe", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", String)
-], Childs.prototype, "image", void 0);
+], Children.prototype, "image", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => parents_entity_1.Parents, (parents) => parents.childs),
     (0, typeorm_1.JoinColumn)({ name: 'id_parent' }),
     __metadata("design:type", parents_entity_1.Parents)
-], Childs.prototype, "parents", void 0);
-__decorate([
-    (0, typeorm_1.ManyToMany)(() => exercises_entity_1.Exercises, (exercises) => exercises.childs),
-    (0, typeorm_1.JoinTable)(),
-    __metadata("design:type", Array)
-], Childs.prototype, "exercises", void 0);
+], Children.prototype, "parents", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => back_pack_entity_1.Back_pack, (backpack) => backpack.child),
     __metadata("design:type", back_pack_entity_1.Back_pack)
-], Childs.prototype, "backpack", void 0);
-exports.Childs = Childs = __decorate([
-    (0, typeorm_1.Entity)('childs')
-], Childs);
+], Children.prototype, "backpack", void 0);
+exports.Children = Children = __decorate([
+    (0, typeorm_1.Entity)('Children')
+], Children);
 //# sourceMappingURL=childs.entity.js.map
