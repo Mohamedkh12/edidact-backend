@@ -67,8 +67,8 @@ export class ParentsController {
   @UseInterceptors(FileInterceptor('image'))
   async createChildOrChildren(
     @Body() createChildrenDto: CreateChildDto | CreateChildDto[],
-    @UploadedFile() image: Express.Multer.File,
-  ): Promise<{ status: boolean; child: Awaited<Children | Children>[] }> {
+    @UploadedFile() image: Express.Multer.File | null,
+  ): Promise<{ status: boolean; child: Children[]; error?: string }> {
     try {
       const createdChildren = await this.parentsService.createChildOrChildren(
         createChildrenDto,
@@ -76,7 +76,7 @@ export class ParentsController {
       );
       return { status: true, child: createdChildren };
     } catch (error) {
-      throw error;
+      return { status: false, child: [], error: error.message };
     }
   }
 

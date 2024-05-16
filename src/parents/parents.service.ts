@@ -14,7 +14,7 @@ import { Roles } from '../roles/entities/roles.entity';
 import * as bcrypt from 'bcrypt';
 import { jwtConstants } from '../auth/jwtConstants';
 import * as dns from 'dns';
-
+import * as fs from 'fs';
 @Injectable()
 export class ParentsService {
   constructor(
@@ -110,9 +110,10 @@ export class ParentsService {
       });
     });
   }
+
   async createChildOrChildren(
     createChildrenDto: CreateChildDto | CreateChildDto[],
-    image: Express.Multer.File,
+    image: Express.Multer.File | null,
   ): Promise<Awaited<Children | Children>[]> {
     try {
       console.log('createChildrenDto:', createChildrenDto);
@@ -132,19 +133,33 @@ export class ParentsService {
           );
         }
 
-        const child = new Children();
-        child.username = createChildDto.username;
-        child.password = createChildDto.password;
-        child.classe = createChildDto.classe;
-        child.roleId = createChildDto.roleId;
-        child.parents = parent;
-        const parentId = createChildDto.id_parent;
-        child.email = `${createChildDto.username}${parentId}`;
-        if (image) {
-          child.image = image.buffer.toString('base64');
+        const existingChild = await this.childRepository.findOne({
+          where: { username: createChildDto.username },
+        });
+        if (existingChild) {
+          throw new BadRequestException(
+            `Child with email ${createChildDto.email} already exists`,
+          );
+        } else {
+          const child = new Children();
+          child.username = createChildDto.username;
+          child.password = createChildDto.password;
+          child.classe = createChildDto.classe;
+          child.roleId = createChildDto.roleId;
+          child.parents = parent;
+          const parentId = createChildDto.id_parent;
+          child.email = `${createChildDto.username}${parentId}`;
+          if (image) {
+            const base64Image = image.buffer.toString('base64');
+            child.image = base64Image;
+          } else {
+            const defaultImage = 'src/parents/uploads/default_child_3.png';
+            const defaultImageBuffer = fs.readFileSync(defaultImage);
+            child.image = defaultImageBuffer.toString('base64');
+          }
+          console.log(child);
+          return this.childRepository.save(child);
         }
-        console.log(child);
-        return this.childRepository.save(child);
       });
 
       return await Promise.all(promises);

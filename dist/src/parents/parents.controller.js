@@ -67,7 +67,7 @@ let ParentsController = class ParentsController {
                 return { status: true, child: createdChildren };
             }
             catch (error) {
-                throw error;
+                return { status: false, child: [], error: error.message };
             }
         });
     }

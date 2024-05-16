@@ -31,6 +31,7 @@ const roles_entity_1 = require("../roles/entities/roles.entity");
 const bcrypt = require("bcrypt");
 const jwtConstants_1 = require("../auth/jwtConstants");
 const dns = require("dns");
+const fs = require("fs");
 let ParentsService = class ParentsService {
     constructor(childRepository, parentsRepository, rolesRepository, jwtService) {
         this.childRepository = childRepository;
@@ -115,19 +116,33 @@ let ParentsService = class ParentsService {
                     if (!parent) {
                         throw new common_1.NotFoundException(`Parent with ID ${createChildDto.id_parent} not found`);
                     }
-                    const child = new parents_entity_1.Children();
-                    child.username = createChildDto.username;
-                    child.password = createChildDto.password;
-                    child.classe = createChildDto.classe;
-                    child.roleId = createChildDto.roleId;
-                    child.parents = parent;
-                    const parentId = createChildDto.id_parent;
-                    child.email = `${createChildDto.username}${parentId}`;
-                    if (image) {
-                        child.image = image.buffer.toString('base64');
+                    const existingChild = yield this.childRepository.findOne({
+                        where: { username: createChildDto.username },
+                    });
+                    if (existingChild) {
+                        throw new common_1.BadRequestException(`Child with email ${createChildDto.email} already exists`);
                     }
-                    console.log(child);
-                    return this.childRepository.save(child);
+                    else {
+                        const child = new parents_entity_1.Children();
+                        child.username = createChildDto.username;
+                        child.password = createChildDto.password;
+                        child.classe = createChildDto.classe;
+                        child.roleId = createChildDto.roleId;
+                        child.parents = parent;
+                        const parentId = createChildDto.id_parent;
+                        child.email = `${createChildDto.username}${parentId}`;
+                        if (image) {
+                            const base64Image = image.buffer.toString('base64');
+                            child.image = base64Image;
+                        }
+                        else {
+                            const defaultImage = 'src/parents/uploads/default_child_3.png';
+                            const defaultImageBuffer = fs.readFileSync(defaultImage);
+                            child.image = defaultImageBuffer.toString('base64');
+                        }
+                        console.log(child);
+                        return this.childRepository.save(child);
+                    }
                 }));
                 return yield Promise.all(promises);
             }
