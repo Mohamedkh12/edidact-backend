@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Query,
+  NotFoundException
 } from '@nestjs/common';
 import { BackPackService } from './back-pack.service';
 import { CreateBackpackDto } from './dto/create-backpack.dto';
