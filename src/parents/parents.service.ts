@@ -134,7 +134,7 @@ export class ParentsService {
         }
 
         const existingChild = await this.childRepository.findOne({
-          where: { username: createChildDto.username },
+          where: { email: createChildDto.email },
         });
         if (existingChild) {
           throw new BadRequestException(

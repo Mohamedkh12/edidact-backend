@@ -26,7 +26,9 @@ export class Back_pack {
   @JoinColumn({ name: 'child_id' })
   child: Children;
 
-  @ManyToMany(() => Exercises, (exercise) => exercise.backpacks)
+  @ManyToMany(() => Exercises, (exercise) => exercise.backpacks, {
+    orphanedRowAction: 'delete',
+  })
   @JoinTable()
   exercises: Exercises[];
 }

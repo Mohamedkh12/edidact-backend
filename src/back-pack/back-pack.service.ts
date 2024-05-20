@@ -61,7 +61,7 @@ export class BackPackService {
   ): Promise<Back_pack> {
     // Trouver le backPack associé à l'exercice
     const backPack = await this.backPackRepository.findOne({
-      relations: ['exercises'], // Assurez-vous que vous avez cette relation dans votre entité
+      relations: ['exercises'],
       where: { id: backPackId },
     });
 
@@ -69,26 +69,15 @@ export class BackPackService {
       throw new Error('Back_pack not found');
     }
 
-    // Filtrer et mettre à jour la liste des exercices dans le backPack
-    backPack.exercises = backPack.exercises.filter(
-      (exercise) => exercise.id !== exerciseId,
-    );
+    // Supprimer l'exercice de la relation ManyToMany
     await this.backPackRepository
       .createQueryBuilder()
       .relation(Back_pack, 'exercises')
       .of(backPack)
       .remove(exerciseId);
-    // Sauvegarder les changements dans le backPack
-    await this.backPackRepository.save(backPack);
 
-    // Supprimer l'entrée de jointure entre l'exercice et le backPack
-    await this.backPackRepository
-      .createQueryBuilder()
-      .relation(Back_pack, 'exercises')
-      .of(backPack)
-      .remove(exerciseId);
-    console.log(backPack)
-    return backPack
+    // Retourner le Back_pack mis à jour
+    return backPack;
   }
 
   async getBackPackByParent(parentId: number): Promise<Back_pack[]> {

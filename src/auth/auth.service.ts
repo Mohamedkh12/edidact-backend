@@ -35,6 +35,8 @@ export class AuthService {
       const { password, ...result } = child;
       return result;
     }
+
+    // Vérifiez si l'utilisateur existe dans la table des admins
     const admin = await this.adminRepository.findOne({ where: { email } });
 
     if (admin && (await bcrypt.compare(password, admin.password))) {
@@ -42,7 +44,7 @@ export class AuthService {
       return result;
     }
 
-    // Si ni le parent ni l'enfant ni l'admin n'est trouvé, retournez null
+    // Si ni le parent, ni l'enfant, ni l'admin n'est trouvé, retournez null
     return null;
   }
 
@@ -50,12 +52,13 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<{ access_token: string; user: Children | Parents | Admin }> {
-    const parent = await this.parentRepository
+    let parent = await this.parentRepository
       .createQueryBuilder('Parents')
       .leftJoinAndSelect('Parents.roles', 'roles')
       .where('Parents.email = :email', { email })
       .addSelect('roles.name')
       .getOne();
+
     console.log('parent:', parent);
     let child = null;
 
@@ -68,32 +71,37 @@ export class AuthService {
         .getOne();
     }
 
-    const admin = await this.adminRepository
-      .createQueryBuilder('admin')
-      .leftJoinAndSelect('admin.roles', 'roles')
-      .where('admin.email = :email', { email })
-      .addSelect('roles.name')
-      .getOne();
-
-    if (!parent && !child && !admin) {
-      throw new UnauthorizedException('Invalid email or password');
+    let admin = null;
+    if (!parent && !child) {
+      admin = await this.adminRepository
+        .createQueryBuilder('Admin')
+        .leftJoinAndSelect('Admin.roles', 'roles')
+        .where('Admin.email = :email', { email })
+        .addSelect('roles.name')
+        .getOne();
     }
 
+    console.log('admin:', admin);
+
     const entity = parent || child || admin;
+
+    if (!entity) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
 
     const isPasswordValid = await bcrypt.compare(password, entity.password);
 
     console.log('entity:', entity);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const payload = {
       email: entity.email,
-      password: entity.password,
       sub: entity.id,
       roleName: entity.roles ? entity.roles.name : null,
     };
+
     console.log('payload:', payload);
     const accessToken = this.jwtService.sign(payload);
 
@@ -115,11 +123,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+
   async checkUserRole(token: string): Promise<string | null> {
     try {
       const decoded = this.jwtService.verify(token);
       console.log('decoded token :', decoded);
-      console.log('decoded.rol:', decoded.roleName);
+      console.log('decoded.roleName:', decoded.roleName);
       return decoded.roleName || null;
     } catch (error) {
       // Si le token est invalide ou expiré

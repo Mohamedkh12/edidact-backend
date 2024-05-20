@@ -44,7 +44,7 @@ let AdminService = class AdminService {
             }
             // Créez le payload du token
             const payload = {
-                username: 'admin',
+                email: 'admin',
                 sub: 'admin',
                 password: 'admin',
                 roleName: 'Admin',
