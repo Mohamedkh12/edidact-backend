@@ -50,6 +50,7 @@ export class BackPackController {
   @Roles('Parent', 'Child')
   @Get('getBackPackByChild/:id')
   getBackPackByChild(@Param('id') id: number) {
+    console.log(id);
     return this.backPackService.getBackPackByChild(id);
   }
 }

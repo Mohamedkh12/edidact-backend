@@ -44,6 +44,7 @@ let BackPackController = class BackPackController {
         return this.backPackService.getBackPackByParent(id);
     }
     getBackPackByChild(id) {
+        console.log(id);
         return this.backPackService.getBackPackByChild(id);
     }
 };

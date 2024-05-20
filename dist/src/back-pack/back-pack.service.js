@@ -63,28 +63,19 @@ let BackPackService = class BackPackService {
         return __awaiter(this, void 0, void 0, function* () {
             // Trouver le backPack associé à l'exercice
             const backPack = yield this.backPackRepository.findOne({
-                relations: ['exercises'], // Assurez-vous que vous avez cette relation dans votre entité
+                relations: ['exercises'],
                 where: { id: backPackId },
             });
             if (!backPack) {
                 throw new Error('Back_pack not found');
             }
-            // Filtrer et mettre à jour la liste des exercices dans le backPack
-            backPack.exercises = backPack.exercises.filter((exercise) => exercise.id !== exerciseId);
+            // Supprimer l'exercice de la relation ManyToMany
             yield this.backPackRepository
                 .createQueryBuilder()
                 .relation(back_pack_entity_1.Back_pack, 'exercises')
                 .of(backPack)
                 .remove(exerciseId);
-            // Sauvegarder les changements dans le backPack
-            yield this.backPackRepository.save(backPack);
-            // Supprimer l'entrée de jointure entre l'exercice et le backPack
-            yield this.backPackRepository
-                .createQueryBuilder()
-                .relation(back_pack_entity_1.Back_pack, 'exercises')
-                .of(backPack)
-                .remove(exerciseId);
-            console.log(backPack);
+            // Retourner le Back_pack mis à jour
             return backPack;
         });
     }

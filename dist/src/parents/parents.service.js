@@ -117,7 +117,7 @@ let ParentsService = class ParentsService {
                         throw new common_1.NotFoundException(`Parent with ID ${createChildDto.id_parent} not found`);
                     }
                     const existingChild = yield this.childRepository.findOne({
-                        where: { username: createChildDto.username },
+                        where: { email: createChildDto.email },
                     });
                     if (existingChild) {
                         throw new common_1.BadRequestException(`Child with email ${createChildDto.email} already exists`);

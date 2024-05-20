@@ -62,18 +62,19 @@ let AuthService = class AuthService {
                 const { password } = child, result = __rest(child, ["password"]);
                 return result;
             }
+            // Vérifiez si l'utilisateur existe dans la table des admins
             const admin = yield this.adminRepository.findOne({ where: { email } });
             if (admin && (yield bcrypt.compare(password, admin.password))) {
                 const { password } = admin, result = __rest(admin, ["password"]);
                 return result;
             }
-            // Si ni le parent ni l'enfant ni l'admin n'est trouvé, retournez null
+            // Si ni le parent, ni l'enfant, ni l'admin n'est trouvé, retournez null
             return null;
         });
     }
     signIn(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const parent = yield this.parentRepository
+            let parent = yield this.parentRepository
                 .createQueryBuilder('Parents')
                 .leftJoinAndSelect('Parents.roles', 'roles')
                 .where('Parents.email = :email', { email })
@@ -89,24 +90,27 @@ let AuthService = class AuthService {
                     .addSelect('roles.name')
                     .getOne();
             }
-            const admin = yield this.adminRepository
-                .createQueryBuilder('admin')
-                .leftJoinAndSelect('admin.roles', 'roles')
-                .where('admin.email = :email', { email })
-                .addSelect('roles.name')
-                .getOne();
-            if (!parent && !child && !admin) {
+            let admin = null;
+            if (!parent && !child) {
+                admin = yield this.adminRepository
+                    .createQueryBuilder('Admin')
+                    .leftJoinAndSelect('Admin.roles', 'roles')
+                    .where('Admin.email = :email', { email })
+                    .addSelect('roles.name')
+                    .getOne();
+            }
+            console.log('admin:', admin);
+            const entity = parent || child || admin;
+            if (!entity) {
                 throw new common_1.UnauthorizedException('Invalid email or password');
             }
-            const entity = parent || child || admin;
             const isPasswordValid = yield bcrypt.compare(password, entity.password);
             console.log('entity:', entity);
             if (!isPasswordValid) {
-                throw new common_1.UnauthorizedException('Invalid username or password');
+                throw new common_1.UnauthorizedException('Invalid email or password');
             }
             const payload = {
                 email: entity.email,
-                password: entity.password,
                 sub: entity.id,
                 roleName: entity.roles ? entity.roles.name : null,
             };
@@ -136,7 +140,7 @@ let AuthService = class AuthService {
             try {
                 const decoded = this.jwtService.verify(token);
                 console.log('decoded token :', decoded);
-                console.log('decoded.rol:', decoded.roleName);
+                console.log('decoded.roleName:', decoded.roleName);
                 return decoded.roleName || null;
             }
             catch (error) {
