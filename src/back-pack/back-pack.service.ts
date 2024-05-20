@@ -80,7 +80,6 @@ export class BackPackService {
     return backPack;
   }
 
-
   async getBackPackByParent(parentId: number): Promise<Back_pack[]> {
     return this.backPackRepository.find({
       where: { parent: { id: parentId } },
