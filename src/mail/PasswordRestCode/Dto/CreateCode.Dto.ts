@@ -2,7 +2,7 @@ import { IsNumber } from 'class-validator';
 
 export class CreateCodeDto {
   @IsNumber()
-  parentId: number;
+  userId: number;
 
   @IsNumber()
   code: string;

@@ -44,7 +44,7 @@ let ParentsService = class ParentsService {
     createParent(createPrentDto) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const existingParent = yield this.parentsRepository.findOne({
+                const existingParent = yield this.userRepository.findOne({
                     where: { email: createPrentDto.email },
                 });
                 if (existingParent) {
@@ -53,10 +53,9 @@ let ParentsService = class ParentsService {
                 const parentRole = yield this.rolesRepository.findOne({
                     where: { name: role_enum_1.Role.Parent },
                 });
-                if (!parentRole) {
-                    throw new common_1.NotFoundException(`Rôle "Parent" non trouvé`);
-                }
-                const hashedPassword = yield bcrypt.hash(createPrentDto.password, 10);
+                // Pas besoin d'appeler createPrentDto.hashPassword(), le mot de passe est déjà haché dans createPrentDto.password
+                const hashedPassword = createPrentDto.password;
+                console.log('hashedPassword', hashedPassword);
                 const createUserDto = {
                     username: createPrentDto.username,
                     email: createPrentDto.email,
@@ -73,7 +72,6 @@ let ParentsService = class ParentsService {
                     id: savedUser.id,
                 });
                 const savedParent = yield this.parentsRepository.save(parent);
-                console.log('parent:', savedParent);
                 const payload = {
                     email: savedParent.email,
                     sub: savedParent.id,
@@ -144,7 +142,7 @@ let ParentsService = class ParentsService {
                         throw new common_1.BadRequestException(`Child with email ${createChildDto.email} already exists`);
                     }
                     // Créer un utilisateur dans le tableau users avec le rôle "Child"
-                    const hashedPassword = yield bcrypt.hash(createChildDto.password, 10);
+                    const hashedPassword = createChildDto.password;
                     const user = this.userRepository.create({
                         username: createChildDto.username,
                         email: `${createChildDto.username}${createChildDto.id_parent}`,
@@ -163,7 +161,6 @@ let ParentsService = class ParentsService {
                     if (image) {
                         child.image = image.buffer.toString('base64');
                     }
-                    console.log(child);
                     return this.childRepository.save(child);
                 }));
                 return yield Promise.all(promises);

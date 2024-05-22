@@ -8,11 +8,27 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateUserDto = exports.CreatePrentDto = void 0;
 const mapped_types_1 = require("@nestjs/mapped-types");
 const class_validator_1 = require("class-validator");
+const typeorm_1 = require("typeorm");
+const bcrypt = require("bcrypt");
 class CreatePrentDto {
+    hashPassword() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.password = yield bcrypt.hash(this.password, 10);
+        });
+    }
 }
 exports.CreatePrentDto = CreatePrentDto;
 __decorate([
@@ -31,6 +47,12 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreatePrentDto.prototype, "tel", void 0);
+__decorate([
+    (0, typeorm_1.BeforeInsert)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], CreatePrentDto.prototype, "hashPassword", null);
 class UpdateUserDto extends (0, mapped_types_1.PartialType)(CreatePrentDto) {
 }
 exports.UpdateUserDto = UpdateUserDto;

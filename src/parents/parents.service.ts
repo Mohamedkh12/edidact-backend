@@ -17,6 +17,7 @@ import { jwtConstants } from '../auth/jwtConstants';
 import * as dns from 'dns';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../roles/enums/role.enum';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class ParentsService {
@@ -42,7 +43,7 @@ export class ParentsService {
     access_token: string;
   }> {
     try {
-      const existingParent = await this.parentsRepository.findOne({
+      const existingParent = await this.userRepository.findOne({
         where: { email: createPrentDto.email },
       });
       if (existingParent) {
@@ -55,13 +56,15 @@ export class ParentsService {
         where: { name: Role.Parent },
       });
 
-      if (!parentRole) {
-        throw new NotFoundException(`Rôle "Parent" non trouvé`);
-      }
-
-      const hashedPassword = await bcrypt.hash(createPrentDto.password, 10);
-
-      const createUserDto: CreateUserDto = {
+      // Pas besoin d'appeler createPrentDto.hashPassword(), le mot de passe est déjà haché dans createPrentDto.password
+      const hashedPassword = createPrentDto.password;
+      console.log('hashedPassword', hashedPassword);
+      const createUserDto: {
+        password: string;
+        roleId: number;
+        email: string;
+        username: string;
+      } = {
         username: createPrentDto.username,
         email: createPrentDto.email,
         password: hashedPassword,
@@ -81,7 +84,6 @@ export class ParentsService {
 
       const savedParent = await this.parentsRepository.save(parent);
 
-      console.log('parent:', savedParent);
       const payload = {
         email: savedParent.email,
         sub: savedParent.id,
@@ -166,7 +168,7 @@ export class ParentsService {
         }
 
         // Créer un utilisateur dans le tableau users avec le rôle "Child"
-        const hashedPassword = await bcrypt.hash(createChildDto.password, 10);
+        const hashedPassword = createChildDto.password;
         const user = this.userRepository.create({
           username: createChildDto.username,
           email: `${createChildDto.username}${createChildDto.id_parent}`,
@@ -186,8 +188,6 @@ export class ParentsService {
         if (image) {
           child.image = image.buffer.toString('base64');
         }
-
-        console.log(child);
         return this.childRepository.save(child);
       });
 

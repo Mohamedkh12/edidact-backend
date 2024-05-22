@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
-
+import * as argon2 from 'argon2';
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,13 +17,8 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userRepository.findOne({ where: { email } });
-
-    console.log('Utilisateur:', user);
     if (user) {
-      console.log('Mot de passe fourni:', password);
-      console.log('Mot de passe stocké (haché):', user.password);
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const isPasswordValid = await argon2.verify(user.password, password);
 
       if (isPasswordValid) {
         const { password, ...result } = user;
@@ -37,16 +32,17 @@ export class AuthService {
     return null;
   }
 
-  async signIn(email: string, password: string): Promise<{ access_token: string; user: User }> {
+  async signIn(
+    email: string,
+    password: string,
+  ): Promise<{ access_token: string; user: User }> {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
-      throw new UnauthorizedException('Email ou mot de passe invalide');
+      throw new UnauthorizedException('Email invalide');
     }
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Email ou mot de passe invalide');
+      throw new UnauthorizedException('Mot de passe invalide');
     }
 
     const payload = {
@@ -59,6 +55,7 @@ export class AuthService {
 
     return { access_token: accessToken, user };
   }
+
   async refreshToken(refreshToken: string): Promise<{ refresh_Token: string }> {
     try {
       const decoded = this.jwtService.verify(refreshToken);

@@ -40,6 +40,7 @@ const typeorm_2 = require("typeorm");
 const bcrypt = require("bcrypt");
 const user_entity_1 = require("../users/entities/user.entity");
 const users_service_1 = require("../users/users.service");
+const argon2 = require("argon2");
 let AuthService = class AuthService {
     constructor(userRepository, jwtService, userService) {
         this.userRepository = userRepository;
@@ -49,11 +50,8 @@ let AuthService = class AuthService {
     validateUser(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.userRepository.findOne({ where: { email } });
-            console.log('Utilisateur:', user);
             if (user) {
-                console.log('Mot de passe fourni:', password);
-                console.log('Mot de passe stocké (haché):', user.password);
-                const isPasswordValid = yield bcrypt.compare(password, user.password);
+                const isPasswordValid = yield argon2.verify(user.password, password);
                 if (isPasswordValid) {
                     const { password } = user, result = __rest(user, ["password"]);
                     return result;
@@ -72,11 +70,11 @@ let AuthService = class AuthService {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.userRepository.findOne({ where: { email } });
             if (!user) {
-                throw new common_1.UnauthorizedException('Email ou mot de passe invalide');
+                throw new common_1.UnauthorizedException('Email invalide');
             }
             const isPasswordValid = yield bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                throw new common_1.UnauthorizedException('Email ou mot de passe invalide');
+                throw new common_1.UnauthorizedException('Mot de passe invalide');
             }
             const payload = {
                 email: user.email,

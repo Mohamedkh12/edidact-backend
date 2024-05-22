@@ -2,27 +2,24 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Parents } from '../parents/entities/parents.entity';
 import { Repository } from 'typeorm';
-import { Admin } from '../admin/entities/admin.entity';
+import { User } from '../users/entities/user.entity';
 
 @Controller('mailer')
 export class MailController {
-  /* constructor(
+  constructor(
     private readonly mailService: MailService,
-    @InjectRepository(Parents)
-    private parentRepository: Repository<Parents>,
-    @InjectRepository(Admin)
-    private adminRepository: Repository<Admin>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   @Public()
-  @Post('forgotPassword')*/
-  /*async forgotPassword(@Body('email') email: string) {
+  @Post('forgotPassword')
+  async forgotPassword(@Body('email') email: string) {
     try {
-      const user =
-        (await this.parentRepository.findOne({ where: { email } })) ||
-        (await this.adminRepository.findOne({ where: { email } }));
+      const user = await this.userRepository.findOne({
+        where: { email: email },
+      });
 
       if (!user) {
         return { message: false, error: 'User with this email does not exist' };
@@ -72,9 +69,12 @@ export class MailController {
 
   @Public()
   @Post('resetPassword')
-  async resetPassword(@Body('newPassword') newPassword: string) {
+  async resetPassword(
+    @Body('newPassword') newPassword: string,
+    @Body('code') code: number,
+  ) {
     try {
-      await this.mailService.resetPassword(newPassword);
+      await this.mailService.resetPassword(code, newPassword);
       return { message: 'Password reset successfully' };
     } catch (error) {
       return { error: error.message };
@@ -99,5 +99,5 @@ export class MailController {
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }*/
+  }
 }
