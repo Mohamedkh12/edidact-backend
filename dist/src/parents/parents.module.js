@@ -17,15 +17,19 @@ const childs_module_1 = require("../childs/childs.module");
 const roles_module_1 = require("../roles/roles.module");
 const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
+const users_module_1 = require("../users/users.module");
+const users_service_1 = require("../users/users.service");
+const user_entity_1 = require("../users/entities/user.entity");
 let ParentsModule = class ParentsModule {
 };
 exports.ParentsModule = ParentsModule;
 exports.ParentsModule = ParentsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([parents_entity_1.Parents]),
+            typeorm_1.TypeOrmModule.forFeature([parents_entity_1.Parents, user_entity_1.User]),
             childs_module_1.ChildsModule,
             roles_module_1.RolesModule,
+            users_module_1.UsersModule,
             jwt_1.JwtModule.register({
                 secret: 'SECRET-CODE142&of',
                 signOptions: { expiresIn: '60m' },
@@ -35,7 +39,7 @@ exports.ParentsModule = ParentsModule = __decorate([
         ],
         exports: [typeorm_1.TypeOrmModule, parents_service_1.ParentsService, childs_service_1.ChildsService],
         controllers: [parents_controller_1.ParentsController],
-        providers: [parents_service_1.ParentsService, childs_service_1.ChildsService],
+        providers: [parents_service_1.ParentsService, childs_service_1.ChildsService, users_service_1.UsersService],
     })
 ], ParentsModule);
 //# sourceMappingURL=parents.module.js.map

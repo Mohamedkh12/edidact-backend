@@ -8,12 +8,16 @@ import { ChildsModule } from '../childs/childs.module';
 import { RolesModule } from '../roles/roles.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { UsersModule } from '../users/users.module';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Parents]),
+    TypeOrmModule.forFeature([Parents, User]),
     ChildsModule,
     RolesModule,
+    UsersModule,
     JwtModule.register({
       secret: 'SECRET-CODE142&of',
       signOptions: { expiresIn: '60m' },
@@ -23,6 +27,6 @@ import { PassportModule } from '@nestjs/passport';
   ],
   exports: [TypeOrmModule, ParentsService, ChildsService],
   controllers: [ParentsController],
-  providers: [ParentsService, ChildsService],
+  providers: [ParentsService, ChildsService, UsersService],
 })
 export class ParentsModule {}

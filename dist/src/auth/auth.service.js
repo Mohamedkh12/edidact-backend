@@ -38,115 +38,76 @@ const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = require("bcrypt");
-const childs_entity_1 = require("../childs/entities/childs.entity");
-const parents_entity_1 = require("../parents/entities/parents.entity");
-const admin_entity_1 = require("../admin/entities/admin.entity");
+const user_entity_1 = require("../users/entities/user.entity");
+const users_service_1 = require("../users/users.service");
 let AuthService = class AuthService {
-    constructor(childRepository, parentRepository, adminRepository, jwtService) {
-        this.childRepository = childRepository;
-        this.parentRepository = parentRepository;
-        this.adminRepository = adminRepository;
+    constructor(userRepository, jwtService, userService) {
+        this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.userService = userService;
     }
     validateUser(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Vérifiez si l'utilisateur existe dans la table des parents
-            const parent = yield this.parentRepository.findOne({ where: { email } });
-            if (parent && (yield bcrypt.compare(password, parent.password))) {
-                const { password } = parent, result = __rest(parent, ["password"]);
-                return result;
+            const user = yield this.userRepository.findOne({ where: { email } });
+            console.log('Utilisateur:', user);
+            if (user) {
+                console.log('Mot de passe fourni:', password);
+                console.log('Mot de passe stocké (haché):', user.password);
+                const isPasswordValid = yield bcrypt.compare(password, user.password);
+                if (isPasswordValid) {
+                    const { password } = user, result = __rest(user, ["password"]);
+                    return result;
+                }
+                else {
+                    console.log('Mot de passe invalide');
+                }
             }
-            // Vérifiez si l'utilisateur existe dans la table des enfants
-            const child = yield this.childRepository.findOne({ where: { email } });
-            if (child && (yield bcrypt.compare(password, child.password))) {
-                const { password } = child, result = __rest(child, ["password"]);
-                return result;
+            else {
+                console.log('Utilisateur non trouvé');
             }
-            // Vérifiez si l'utilisateur existe dans la table des admins
-            const admin = yield this.adminRepository.findOne({ where: { email } });
-            if (admin && (yield bcrypt.compare(password, admin.password))) {
-                const { password } = admin, result = __rest(admin, ["password"]);
-                return result;
-            }
-            // Si ni le parent, ni l'enfant, ni l'admin n'est trouvé, retournez null
             return null;
         });
     }
     signIn(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            let parent = yield this.parentRepository
-                .createQueryBuilder('Parents')
-                .leftJoinAndSelect('Parents.roles', 'roles')
-                .where('Parents.email = :email', { email })
-                .addSelect('roles.name')
-                .getOne();
-            console.log('parent:', parent);
-            let child = null;
-            if (!parent) {
-                child = yield this.childRepository
-                    .createQueryBuilder('child')
-                    .leftJoinAndSelect('child.roles', 'roles')
-                    .where('child.email = :email', { email })
-                    .addSelect('roles.name')
-                    .getOne();
+            const user = yield this.userRepository.findOne({ where: { email } });
+            if (!user) {
+                throw new common_1.UnauthorizedException('Email ou mot de passe invalide');
             }
-            let admin = null;
-            if (!parent && !child) {
-                admin = yield this.adminRepository
-                    .createQueryBuilder('Admin')
-                    .leftJoinAndSelect('Admin.roles', 'roles')
-                    .where('Admin.email = :email', { email })
-                    .addSelect('roles.name')
-                    .getOne();
-            }
-            console.log('admin:', admin);
-            const entity = parent || child || admin;
-            if (!entity) {
-                throw new common_1.UnauthorizedException('Invalid email or password');
-            }
-            const isPasswordValid = yield bcrypt.compare(password, entity.password);
-            console.log('entity:', entity);
+            const isPasswordValid = yield bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                throw new common_1.UnauthorizedException('Invalid email or password');
+                throw new common_1.UnauthorizedException('Email ou mot de passe invalide');
             }
             const payload = {
-                email: entity.email,
-                sub: entity.id,
-                roleName: entity.roles ? entity.roles.name : null,
+                email: user.email,
+                sub: user.id,
+                roleName: user.roles ? user.roles.name : null,
             };
-            console.log('payload:', payload);
             const accessToken = this.jwtService.sign(payload);
-            return { access_token: accessToken, user: entity };
+            return { access_token: accessToken, user };
         });
     }
     refreshToken(refreshToken) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const decoded = this.jwtService.verify(refreshToken);
+                const user = yield this.userRepository.findOne({
+                    where: { email: decoded.email },
+                });
+                if (!user) {
+                    throw new common_1.UnauthorizedException('Jeton de rafraîchissement invalide');
+                }
                 const payload = {
-                    email: decoded.email,
-                    sub: decoded.sub,
-                    roleName: decoded.roleName,
+                    email: user.email,
+                    sub: user.id,
+                    roleName: user.roles ? user.roles.name : null,
                 };
-                return { refresh_Token: this.jwtService.sign(payload) };
+                return {
+                    refresh_Token: this.jwtService.sign(payload, { expiresIn: '1d' }),
+                };
             }
             catch (error) {
-                throw new common_1.UnauthorizedException('Invalid refresh token');
-            }
-        });
-    }
-    checkUserRole(token) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const decoded = this.jwtService.verify(token);
-                console.log('decoded token :', decoded);
-                console.log('decoded.roleName:', decoded.roleName);
-                return decoded.roleName || null;
-            }
-            catch (error) {
-                // Si le token est invalide ou expiré
-                console.error('Invalid token:', error);
-                return null;
+                throw new common_1.UnauthorizedException('Jeton de rafraîchissement invalide');
             }
         });
     }
@@ -168,12 +129,9 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(childs_entity_1.Children)),
-    __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
-    __param(2, (0, typeorm_1.InjectRepository)(admin_entity_1.Admin)),
+    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
-        typeorm_2.Repository,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        users_service_1.UsersService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -5,21 +5,16 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Parents } from '../../../parents/entities/parents.entity';
-import { Admin } from '../../../admin/entities/admin.entity';
+import { User } from '../../../users/entities/user.entity';
 
 @Entity()
 export class Codes {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Parents, (parents) => parents.codes, { nullable: true })
-  @JoinColumn({ name: 'id_parent' })
-  parent: Parents;
-
-  @ManyToOne(() => Admin, (admin) => admin.codes, { nullable: true })
-  @JoinColumn({ name: 'id_admin' })
-  admin: Admin;
+  @ManyToOne(() => User, (users) => users.codes, { nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @Column()
   code: number;

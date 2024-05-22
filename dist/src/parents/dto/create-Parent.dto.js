@@ -31,10 +31,6 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreatePrentDto.prototype, "tel", void 0);
-__decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreatePrentDto.prototype, "roleId", void 0);
 class UpdateUserDto extends (0, mapped_types_1.PartialType)(CreatePrentDto) {
 }
 exports.UpdateUserDto = UpdateUserDto;

@@ -31,47 +31,60 @@ const roles_entity_1 = require("../roles/entities/roles.entity");
 const bcrypt = require("bcrypt");
 const jwtConstants_1 = require("../auth/jwtConstants");
 const dns = require("dns");
-const fs = require("fs");
+const user_entity_1 = require("../users/entities/user.entity");
+const role_enum_1 = require("../roles/enums/role.enum");
 let ParentsService = class ParentsService {
-    constructor(childRepository, parentsRepository, rolesRepository, jwtService) {
+    constructor(childRepository, parentsRepository, rolesRepository, userRepository, jwtService) {
         this.childRepository = childRepository;
         this.parentsRepository = parentsRepository;
         this.rolesRepository = rolesRepository;
+        this.userRepository = userRepository;
         this.jwtService = jwtService;
     }
     createParent(createPrentDto) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const roleId = parseInt(createPrentDto.roleId.toString(), 10);
-                // Vérifier si un parent avec la même adresse e-mail existe déjà
                 const existingParent = yield this.parentsRepository.findOne({
                     where: { email: createPrentDto.email },
                 });
                 if (existingParent) {
                     throw new common_1.BadRequestException('Un parent avec la même adresse e-mail existe déjà');
                 }
-                // Vérifier si le rôle existe
-                const role = yield this.rolesRepository.findOne({
-                    where: { id: roleId },
+                const parentRole = yield this.rolesRepository.findOne({
+                    where: { name: role_enum_1.Role.Parent },
                 });
-                if (!role) {
-                    throw new common_1.NotFoundException(`Rôle avec l'ID ${roleId} non trouvé`);
+                if (!parentRole) {
+                    throw new common_1.NotFoundException(`Rôle "Parent" non trouvé`);
                 }
                 const hashedPassword = yield bcrypt.hash(createPrentDto.password, 10);
-                const parent = yield this.parentsRepository.save(Object.assign(Object.assign({}, createPrentDto), { password: hashedPassword, roleId, roles: role }));
-                console.log('parent:', parent);
-                const payload = {
-                    email: parent.email,
-                    sub: parent.id,
-                    roleName: role.name,
+                const createUserDto = {
+                    username: createPrentDto.username,
+                    email: createPrentDto.email,
+                    password: hashedPassword,
+                    roleId: parentRole.id,
                 };
-                // Générer un token JWT pour le parent
+                const user = this.userRepository.create(createUserDto);
+                const savedUser = yield this.userRepository.save(user);
+                const parent = this.parentsRepository.create({
+                    tel: createPrentDto.tel,
+                    email: createPrentDto.email,
+                    username: createPrentDto.username,
+                    password: hashedPassword,
+                    id: savedUser.id,
+                });
+                const savedParent = yield this.parentsRepository.save(parent);
+                console.log('parent:', savedParent);
+                const payload = {
+                    email: savedParent.email,
+                    sub: savedParent.id,
+                    roleName: parentRole.name,
+                };
                 const token = yield this.jwtService.signAsync(payload, {
                     secret: jwtConstants_1.jwtConstants.secret,
                     expiresIn: '1h',
                 });
                 return {
-                    parent,
+                    parent: savedParent,
                     access_token: token,
                 };
             }
@@ -116,33 +129,42 @@ let ParentsService = class ParentsService {
                     if (!parent) {
                         throw new common_1.NotFoundException(`Parent with ID ${createChildDto.id_parent} not found`);
                     }
+                    const childRole = yield this.rolesRepository.findOne({
+                        where: { name: role_enum_1.Role.Child },
+                    });
+                    if (!childRole) {
+                        throw new common_1.NotFoundException(`Rôle "Child" non trouvé`);
+                    }
                     const existingChild = yield this.childRepository.findOne({
-                        where: { email: createChildDto.email },
+                        where: {
+                            email: `${createChildDto.username}${createChildDto.id_parent}`,
+                        },
                     });
                     if (existingChild) {
                         throw new common_1.BadRequestException(`Child with email ${createChildDto.email} already exists`);
                     }
-                    else {
-                        const child = new parents_entity_1.Children();
-                        child.username = createChildDto.username;
-                        child.password = createChildDto.password;
-                        child.classe = createChildDto.classe;
-                        child.roleId = createChildDto.roleId;
-                        child.parents = parent;
-                        const parentId = createChildDto.id_parent;
-                        child.email = `${createChildDto.username}${parentId}`;
-                        if (image) {
-                            const base64Image = image.buffer.toString('base64');
-                            child.image = base64Image;
-                        }
-                        else {
-                            const defaultImage = 'src/parents/uploads/default_child_3.png';
-                            const defaultImageBuffer = fs.readFileSync(defaultImage);
-                            child.image = defaultImageBuffer.toString('base64');
-                        }
-                        console.log(child);
-                        return this.childRepository.save(child);
+                    // Créer un utilisateur dans le tableau users avec le rôle "Child"
+                    const hashedPassword = yield bcrypt.hash(createChildDto.password, 10);
+                    const user = this.userRepository.create({
+                        username: createChildDto.username,
+                        email: `${createChildDto.username}${createChildDto.id_parent}`,
+                        password: hashedPassword,
+                        roleId: childRole.id,
+                    });
+                    const savedUser = yield this.userRepository.save(user);
+                    // Créer un enfant dans le tableau children
+                    const child = new parents_entity_1.Children();
+                    child.username = createChildDto.username;
+                    child.classe = createChildDto.classe;
+                    child.password = hashedPassword;
+                    child.parents = parent;
+                    child.id = savedUser.id;
+                    child.email = `${createChildDto.username}${createChildDto.id_parent}`;
+                    if (image) {
+                        child.image = image.buffer.toString('base64');
                     }
+                    console.log(child);
+                    return this.childRepository.save(child);
                 }));
                 return yield Promise.all(promises);
             }
@@ -214,17 +236,34 @@ let ParentsService = class ParentsService {
                 // Hasher le nouveau mot de passe
                 child.password = yield bcrypt.hash(updateChildDto.password, 10);
             }
+            // Synchroniser les modifications dans le tableau users
+            const user = yield this.userRepository.findOne({ where: { id: child.id } });
+            if (!user) {
+                throw new common_1.NotFoundException("User doesn't exist for this child");
+            }
+            Object.assign(user, updateChildDto);
+            if (updateChildDto.password) {
+                user.password = child.password;
+            }
+            yield this.userRepository.save(user);
             return yield this.childRepository.save(child);
         });
     }
     //supprimer un child
     remove(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Utilisez directement l'ID sans conversion
             const child = yield this.childRepository.findOne({ where: { id: id } });
-            if (!child)
-                throw new common_1.NotFoundException('child not found');
-            return yield this.childRepository.remove(child);
+            if (!child) {
+                throw new common_1.NotFoundException('Child not found');
+            }
+            const user = yield this.userRepository.findOne({
+                where: { id: child.id },
+            });
+            if (!user) {
+                throw new common_1.NotFoundException("Associated user doesn't exist");
+            }
+            yield this.childRepository.remove(child);
+            return yield this.userRepository.remove(user);
         });
     }
     getParentFromToken(token) {
@@ -302,7 +341,9 @@ exports.ParentsService = ParentsService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(parents_entity_1.Children)),
     __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
     __param(2, (0, typeorm_1.InjectRepository)(roles_entity_1.Roles)),
+    __param(3, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService])

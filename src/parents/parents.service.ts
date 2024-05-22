@@ -9,12 +9,15 @@ import { Children, Parents } from './entities/parents.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePrentDto } from './dto/create-Parent.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Roles } from '../roles/entities/roles.entity';
 import * as bcrypt from 'bcrypt';
 import { jwtConstants } from '../auth/jwtConstants';
 import * as dns from 'dns';
-import * as fs from 'fs';
+import { User } from '../users/entities/user.entity';
+import { Role } from '../roles/enums/role.enum';
+
 @Injectable()
 export class ParentsService {
   constructor(
@@ -24,14 +27,14 @@ export class ParentsService {
     private parentsRepository: Repository<Parents>,
     @InjectRepository(Roles)
     private rolesRepository: Repository<Roles>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private jwtService: JwtService,
   ) {}
 
   async createParent(createPrentDto: CreatePrentDto): Promise<{
     parent: {
       password: string;
-      roleId: number;
-      roles: Roles;
       tel: number;
       email: string;
       username: string;
@@ -39,9 +42,6 @@ export class ParentsService {
     access_token: string;
   }> {
     try {
-      const roleId = parseInt(createPrentDto.roleId.toString(), 10);
-
-      // Vérifier si un parent avec la même adresse e-mail existe déjà
       const existingParent = await this.parentsRepository.findOne({
         where: { email: createPrentDto.email },
       });
@@ -51,37 +51,50 @@ export class ParentsService {
         );
       }
 
-      // Vérifier si le rôle existe
-      const role = await this.rolesRepository.findOne({
-        where: { id: roleId },
+      const parentRole = await this.rolesRepository.findOne({
+        where: { name: Role.Parent },
       });
 
-      if (!role) {
-        throw new NotFoundException(`Rôle avec l'ID ${roleId} non trouvé`);
+      if (!parentRole) {
+        throw new NotFoundException(`Rôle "Parent" non trouvé`);
       }
 
       const hashedPassword = await bcrypt.hash(createPrentDto.password, 10);
-      const parent = await this.parentsRepository.save({
-        ...createPrentDto,
+
+      const createUserDto: CreateUserDto = {
+        username: createPrentDto.username,
+        email: createPrentDto.email,
         password: hashedPassword,
-        roleId,
-        roles: role,
-      });
-      console.log('parent:', parent);
-      const payload = {
-        email: parent.email,
-        sub: parent.id,
-        roleName: role.name,
+        roleId: parentRole.id,
       };
 
-      // Générer un token JWT pour le parent
+      const user = this.userRepository.create(createUserDto);
+      const savedUser = await this.userRepository.save(user);
+
+      const parent = this.parentsRepository.create({
+        tel: createPrentDto.tel,
+        email: createPrentDto.email,
+        username: createPrentDto.username,
+        password: hashedPassword,
+        id: savedUser.id,
+      });
+
+      const savedParent = await this.parentsRepository.save(parent);
+
+      console.log('parent:', savedParent);
+      const payload = {
+        email: savedParent.email,
+        sub: savedParent.id,
+        roleName: parentRole.name,
+      };
+
       const token = await this.jwtService.signAsync(payload, {
         secret: jwtConstants.secret,
         expiresIn: '1h',
       });
 
       return {
-        parent,
+        parent: savedParent,
         access_token: token,
       };
     } catch (error) {
@@ -110,10 +123,9 @@ export class ParentsService {
       });
     });
   }
-
   async createChildOrChildren(
     createChildrenDto: CreateChildDto | CreateChildDto[],
-    image: Express.Multer.File | null,
+    image: Express.Multer.File,
   ): Promise<Awaited<Children | Children>[]> {
     try {
       console.log('createChildrenDto:', createChildrenDto);
@@ -133,33 +145,50 @@ export class ParentsService {
           );
         }
 
-        const existingChild = await this.childRepository.findOne({
-          where: { email: createChildDto.email },
+        const childRole = await this.rolesRepository.findOne({
+          where: { name: Role.Child },
         });
+
+        if (!childRole) {
+          throw new NotFoundException(`Rôle "Child" non trouvé`);
+        }
+
+        const existingChild = await this.childRepository.findOne({
+          where: {
+            email: `${createChildDto.username}${createChildDto.id_parent}`,
+          },
+        });
+
         if (existingChild) {
           throw new BadRequestException(
             `Child with email ${createChildDto.email} already exists`,
           );
-        } else {
-          const child = new Children();
-          child.username = createChildDto.username;
-          child.password = createChildDto.password;
-          child.classe = createChildDto.classe;
-          child.roleId = createChildDto.roleId;
-          child.parents = parent;
-          const parentId = createChildDto.id_parent;
-          child.email = `${createChildDto.username}${parentId}`;
-          if (image) {
-            const base64Image = image.buffer.toString('base64');
-            child.image = base64Image;
-          } else {
-            const defaultImage = 'src/parents/uploads/default_child_3.png';
-            const defaultImageBuffer = fs.readFileSync(defaultImage);
-            child.image = defaultImageBuffer.toString('base64');
-          }
-          console.log(child);
-          return this.childRepository.save(child);
         }
+
+        // Créer un utilisateur dans le tableau users avec le rôle "Child"
+        const hashedPassword = await bcrypt.hash(createChildDto.password, 10);
+        const user = this.userRepository.create({
+          username: createChildDto.username,
+          email: `${createChildDto.username}${createChildDto.id_parent}`,
+          password: hashedPassword,
+          roleId: childRole.id,
+        });
+        const savedUser = await this.userRepository.save(user);
+
+        // Créer un enfant dans le tableau children
+        const child = new Children();
+        child.username = createChildDto.username;
+        child.classe = createChildDto.classe;
+        child.password = hashedPassword;
+        child.parents = parent;
+        child.id = savedUser.id;
+        child.email = `${createChildDto.username}${createChildDto.id_parent}`;
+        if (image) {
+          child.image = image.buffer.toString('base64');
+        }
+
+        console.log(child);
+        return this.childRepository.save(child);
       });
 
       return await Promise.all(promises);
@@ -237,15 +266,38 @@ export class ParentsService {
       // Hasher le nouveau mot de passe
       child.password = await bcrypt.hash(updateChildDto.password, 10);
     }
+
+    // Synchroniser les modifications dans le tableau users
+    const user = await this.userRepository.findOne({ where: { id: child.id } });
+    if (!user) {
+      throw new NotFoundException("User doesn't exist for this child");
+    }
+    Object.assign(user, updateChildDto);
+    if (updateChildDto.password) {
+      user.password = child.password;
+    }
+    await this.userRepository.save(user);
+
     return await this.childRepository.save(child);
   }
+
   //supprimer un child
   async remove(id: number) {
-    // Utilisez directement l'ID sans conversion
     const child = await this.childRepository.findOne({ where: { id: id } });
 
-    if (!child) throw new NotFoundException('child not found');
-    return await this.childRepository.remove(child);
+    if (!child) {
+      throw new NotFoundException('Child not found');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: child.id },
+    });
+    if (!user) {
+      throw new NotFoundException("Associated user doesn't exist");
+    }
+
+    await this.childRepository.remove(child);
+    return await this.userRepository.remove(user);
   }
   async getParentFromToken(token: string): Promise<Parents | null> {
     try {

@@ -22,10 +22,6 @@ export class CreateChildDto {
 
   @IsNotEmpty()
   @IsNumber()
-  roleId: number;
-
-  @IsNotEmpty()
-  @IsNumber()
   id_parent: number;
 
   image: string;

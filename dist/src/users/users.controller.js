@@ -50,9 +50,9 @@ let UsersController = class UsersController {
     findOne(id) {
         return this.usersService.findOne(id);
     }
-    findOneByUsername(username) {
+    findOneByemail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.usersService.findOneByusername(username);
+            return yield this.usersService.findOneByemail(email);
         });
     }
     update(id, updateUserDto) {
@@ -98,12 +98,12 @@ __decorate([
 ], UsersController.prototype, "findOne", null);
 __decorate([
     (0, public_decorator_1.Public)(),
-    (0, common_1.Get)('/findByusername/:username'),
-    __param(0, (0, common_1.Param)('username')),
+    (0, common_1.Post)('/findOneByemail'),
+    __param(0, (0, common_1.Body)('email')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], UsersController.prototype, "findOneByUsername", null);
+], UsersController.prototype, "findOneByemail", null);
 __decorate([
     (0, roles_decorator_1.Roles)('Parent', 'Admin'),
     (0, common_1.UseGuards)(jwt_auth_guards_1.JwtAuthGuards),

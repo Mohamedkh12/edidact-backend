@@ -8,7 +8,7 @@ import { Admin } from '../admin/entities/admin.entity';
 
 @Controller('mailer')
 export class MailController {
-  constructor(
+  /* constructor(
     private readonly mailService: MailService,
     @InjectRepository(Parents)
     private parentRepository: Repository<Parents>,
@@ -17,8 +17,8 @@ export class MailController {
   ) {}
 
   @Public()
-  @Post('forgotPassword')
-  async forgotPassword(@Body('email') email: string) {
+  @Post('forgotPassword')*/
+  /*async forgotPassword(@Body('email') email: string) {
     try {
       const user =
         (await this.parentRepository.findOne({ where: { email } })) ||
@@ -99,5 +99,5 @@ export class MailController {
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }
+  }*/
 }

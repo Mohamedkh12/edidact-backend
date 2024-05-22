@@ -32,9 +32,7 @@ __decorate([
     __metadata("design:type", childs_entity_1.Children)
 ], Back_pack.prototype, "child", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => exercises_entity_1.Exercises, (exercise) => exercise.backpacks, {
-        orphanedRowAction: 'delete',
-    }),
+    (0, typeorm_1.ManyToMany)(() => exercises_entity_1.Exercises, (exercise) => exercise.backpacks),
     (0, typeorm_1.JoinTable)(),
     __metadata("design:type", Array)
 ], Back_pack.prototype, "exercises", void 0);
