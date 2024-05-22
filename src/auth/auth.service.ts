@@ -38,14 +38,7 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string): Promise<{ access_token: string; user: User }> {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.roles', 'roles')
-      .where('user.email = :email', { email })
-      .addSelect('user.password')
-      .addSelect('roles.name')
-      .getOne();
-
+    const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new UnauthorizedException('Email ou mot de passe invalide');
     }

@@ -70,13 +70,7 @@ let AuthService = class AuthService {
     }
     signIn(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository
-                .createQueryBuilder('user')
-                .leftJoinAndSelect('user.roles', 'roles')
-                .where('user.email = :email', { email })
-                .addSelect('user.password')
-                .addSelect('roles.name')
-                .getOne();
+            const user = yield this.userRepository.findOne({ where: { email } });
             if (!user) {
                 throw new common_1.UnauthorizedException('Email ou mot de passe invalide');
             }
