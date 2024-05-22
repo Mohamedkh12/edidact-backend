@@ -32,6 +32,10 @@ class CreatePrentDto {
 }
 exports.CreatePrentDto = CreatePrentDto;
 __decorate([
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreatePrentDto.prototype, "id", void 0);
+__decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePrentDto.prototype, "username", void 0);

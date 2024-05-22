@@ -17,7 +17,7 @@ import { jwtConstants } from '../auth/jwtConstants';
 import * as dns from 'dns';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../roles/enums/role.enum';
-import * as argon2 from 'argon2';
+import * as fs from 'fs';
 
 @Injectable()
 export class ParentsService {
@@ -34,67 +34,70 @@ export class ParentsService {
   ) {}
 
   async createParent(createPrentDto: CreatePrentDto): Promise<{
-    parent: {
-      password: string;
-      tel: number;
-      email: string;
-      username: string;
-    } & Parents;
+    parent: Parents; // Retourne directement l'entité parent
     access_token: string;
   }> {
     try {
+      // Vérifier si un parent avec la même adresse e-mail existe déjà
       const existingParent = await this.userRepository.findOne({
         where: { email: createPrentDto.email },
       });
+
       if (existingParent) {
         throw new BadRequestException(
           'Un parent avec la même adresse e-mail existe déjà',
         );
       }
 
+      // Récupérer le rôle parent
       const parentRole = await this.rolesRepository.findOne({
         where: { name: Role.Parent },
       });
 
-      // Pas besoin d'appeler createPrentDto.hashPassword(), le mot de passe est déjà haché dans createPrentDto.password
+      // Hacher le mot de passe
       const hashedPassword = createPrentDto.password;
-      console.log('hashedPassword', hashedPassword);
-      const createUserDto: {
-        password: string;
-        roleId: number;
-        email: string;
-        username: string;
-      } = {
+
+      // Créer l'utilisateur
+      const user = this.userRepository.create({
         username: createPrentDto.username,
         email: createPrentDto.email,
         password: hashedPassword,
         roleId: parentRole.id,
-      };
-
-      const user = this.userRepository.create(createUserDto);
-      const savedUser = await this.userRepository.save(user);
-
-      const parent = this.parentsRepository.create({
-        tel: createPrentDto.tel,
-        email: createPrentDto.email,
-        username: createPrentDto.username,
-        password: hashedPassword,
-        id: savedUser.id,
       });
 
+      // Enregistrer l'utilisateur
+      const savedUser = await this.userRepository.save(user);
+
+      // Créer le parent en utilisant l'identifiant de l'utilisateur
+      const parent = new Parents(
+        createPrentDto.username,
+        createPrentDto.email,
+        hashedPassword,
+        createPrentDto.tel, // Utilisez l'identifiant de l'utilisateur
+      );
+      parent.id = savedUser.id;
+      parent.username = createPrentDto.username;
+      parent.tel = createPrentDto.tel;
+      parent.password = hashedPassword;
+      parent.email = createPrentDto.email;
+
+      // Enregistrer le parent
       const savedParent = await this.parentsRepository.save(parent);
 
+      // Créer le payload du token JWT
       const payload = {
         email: savedParent.email,
-        sub: savedParent.id,
+        sub: savedUser.id,
         roleName: parentRole.name,
       };
 
+      // Générer le token JWT
       const token = await this.jwtService.signAsync(payload, {
         secret: jwtConstants.secret,
         expiresIn: '1h',
       });
 
+      // Retourner l'entité parent et le token JWT
       return {
         parent: savedParent,
         access_token: token,
@@ -103,7 +106,6 @@ export class ParentsService {
       throw new BadRequestException(error.message);
     }
   }
-
   async verifyEmail(email: string): Promise<boolean> {
     // Vérification de l'email avec une expression régulière
     const emailRegex = /^\S+@\S+$/i;
@@ -130,7 +132,6 @@ export class ParentsService {
     image: Express.Multer.File,
   ): Promise<Awaited<Children | Children>[]> {
     try {
-      console.log('createChildrenDto:', createChildrenDto);
       const childrenToCreate: CreateChildDto[] = Array.isArray(
         createChildrenDto,
       )
@@ -138,7 +139,7 @@ export class ParentsService {
         : [createChildrenDto];
 
       const promises = childrenToCreate.map(async (createChildDto) => {
-        const parent = await this.parentsRepository.findOne({
+        const parent = await this.userRepository.findOne({
           where: { id: createChildDto.id_parent },
         });
         if (!parent) {
@@ -182,11 +183,18 @@ export class ParentsService {
         child.username = createChildDto.username;
         child.classe = createChildDto.classe;
         child.password = hashedPassword;
-        child.parents = parent;
+        if (parent instanceof Parents) {
+          child.parents = parent;
+        }
         child.id = savedUser.id;
         child.email = `${createChildDto.username}${createChildDto.id_parent}`;
         if (image) {
           child.image = image.buffer.toString('base64');
+        } else {
+          const defaultImage = fs.readFileSync(
+            'src/parents/uploads/default_child_3.png',
+          );
+          child.image = defaultImage.toString('base64');
         }
         return this.childRepository.save(child);
       });
@@ -197,13 +205,13 @@ export class ParentsService {
     }
   }
 
-  async findOne(idOrUsername: number | string): Promise<Parents | undefined> {
+  async findOne(idOrUsername: number | string): Promise<User> {
     if (typeof idOrUsername === 'number') {
-      return await this.parentsRepository.findOne({
+      return await this.userRepository.findOne({
         where: { id: idOrUsername },
       });
     } else {
-      return await this.parentsRepository.findOne({
+      return await this.userRepository.findOne({
         where: { username: idOrUsername },
       });
     }
@@ -226,14 +234,14 @@ export class ParentsService {
     updateChildDto: UpdateChildDto,
     image: Express.Multer.File,
   ) {
-    const child = await this.childRepository.findOne({ where: { id: id } });
+    const child = await this.userRepository.findOne({ where: { id: id } });
     if (!child) {
       throw new NotFoundException("Child doesn't exist");
     }
 
     // Vérifier si le prénom est unique
     if (updateChildDto.username && updateChildDto.username !== child.username) {
-      const existingChild = await this.childRepository.findOne({
+      const existingChild = await this.userRepository.findOne({
         where: { username: updateChildDto.username },
       });
       if (existingChild) {
@@ -245,7 +253,7 @@ export class ParentsService {
 
     // Vérifier si l'identifiant (email) est unique
     if (updateChildDto.email && updateChildDto.email !== child.email) {
-      const existingChild = await this.childRepository.findOne({
+      const existingChild = await this.userRepository.findOne({
         where: { email: updateChildDto.email },
       });
       if (existingChild) {
@@ -324,9 +332,8 @@ export class ParentsService {
   async findChildrenNames(parentId: number): Promise<string[]> {
     const parent = await this.parentsRepository.findOne({
       where: { id: parentId },
-      relations: ['childs'], // Load the related children
     });
-
+    console.log(parent);
     if (!parent) {
       throw new NotFoundException('Parent not found');
     }

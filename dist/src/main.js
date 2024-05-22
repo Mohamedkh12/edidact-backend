@@ -17,6 +17,7 @@ const session = require("express-session");
 const passport = require("passport");
 const helmet_1 = require("helmet");
 const jwtConstants_1 = require("./auth/jwtConstants");
+const common_1 = require("@nestjs/common");
 function bootstrap() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = yield core_1.NestFactory.create(app_module_1.AppModule);
@@ -38,6 +39,8 @@ function bootstrap() {
         app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
         app.use(cookieParser());
         yield app.listen(3000);
+        app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
+        app.useGlobalInterceptors(new common_1.ClassSerializerInterceptor(app.get(core_1.Reflector)));
     });
 }
 bootstrap();

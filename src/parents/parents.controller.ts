@@ -23,6 +23,7 @@ import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { Roles } from '../roles/decorators/roles.decorator';
 import { JwtAuthGuards } from '../auth/strategy/jwt-auth.guards';
 import { RolesGuard } from '../roles/guards/rôles.guard';
+import { User } from "../users/entities/user.entity";
 
 @Controller('parents')
 export class ParentsController {
@@ -41,7 +42,7 @@ export class ParentsController {
   @UseGuards(JwtAuthGuards, RolesGuard)
   @Roles('Parent')
   @Get('findParent/:id')
-  async findOne(@Param('id') id: number): Promise<Parents> {
+  async findOne(@Param('id') id: number): Promise<User> {
     return await this.parentsService.findOne(id);
   }
 

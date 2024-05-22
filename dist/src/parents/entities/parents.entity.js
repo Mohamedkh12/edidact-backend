@@ -15,14 +15,20 @@ const user_entity_1 = require("../../users/entities/user.entity");
 const childs_entity_1 = require("../../childs/entities/childs.entity");
 Object.defineProperty(exports, "Children", { enumerable: true, get: function () { return childs_entity_1.Children; } });
 const back_pack_entity_1 = require("../../back-pack/entities/back_pack.entity");
-const class_transformer_1 = require("class-transformer");
 let Parents = class Parents extends user_entity_1.User {
+    constructor(username, email, password, tel) {
+        super();
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.tel = tel;
+    }
 };
 exports.Parents = Parents;
 __decorate([
-    (0, class_transformer_1.Exclude)(),
+    (0, typeorm_1.PrimaryColumn)({ type: 'integer' }),
     __metadata("design:type", Number)
-], Parents.prototype, "roleId", void 0);
+], Parents.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'integer' }),
     __metadata("design:type", Number)
@@ -36,6 +42,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Parents.prototype, "backpacks", void 0);
 exports.Parents = Parents = __decorate([
-    (0, typeorm_1.Entity)('parents')
+    (0, typeorm_1.Entity)('parents'),
+    __metadata("design:paramtypes", [String, String, String, Number])
 ], Parents);
 //# sourceMappingURL=parents.entity.js.map

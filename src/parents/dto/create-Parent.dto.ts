@@ -3,6 +3,8 @@ import { IsEmail, IsNumber, IsString } from 'class-validator';
 import { BeforeInsert } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 export class CreatePrentDto {
+  @IsNumber()
+  id: number;
   @IsString()
   username: string;
 

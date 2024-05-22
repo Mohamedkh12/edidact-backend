@@ -33,6 +33,7 @@ const jwtConstants_1 = require("../auth/jwtConstants");
 const dns = require("dns");
 const user_entity_1 = require("../users/entities/user.entity");
 const role_enum_1 = require("../roles/enums/role.enum");
+const fs = require("fs");
 let ParentsService = class ParentsService {
     constructor(childRepository, parentsRepository, rolesRepository, userRepository, jwtService) {
         this.childRepository = childRepository;
@@ -44,43 +45,49 @@ let ParentsService = class ParentsService {
     createParent(createPrentDto) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // Vérifier si un parent avec la même adresse e-mail existe déjà
                 const existingParent = yield this.userRepository.findOne({
                     where: { email: createPrentDto.email },
                 });
                 if (existingParent) {
                     throw new common_1.BadRequestException('Un parent avec la même adresse e-mail existe déjà');
                 }
+                // Récupérer le rôle parent
                 const parentRole = yield this.rolesRepository.findOne({
                     where: { name: role_enum_1.Role.Parent },
                 });
-                // Pas besoin d'appeler createPrentDto.hashPassword(), le mot de passe est déjà haché dans createPrentDto.password
+                // Hacher le mot de passe
                 const hashedPassword = createPrentDto.password;
-                console.log('hashedPassword', hashedPassword);
-                const createUserDto = {
+                // Créer l'utilisateur
+                const user = this.userRepository.create({
                     username: createPrentDto.username,
                     email: createPrentDto.email,
                     password: hashedPassword,
                     roleId: parentRole.id,
-                };
-                const user = this.userRepository.create(createUserDto);
-                const savedUser = yield this.userRepository.save(user);
-                const parent = this.parentsRepository.create({
-                    tel: createPrentDto.tel,
-                    email: createPrentDto.email,
-                    username: createPrentDto.username,
-                    password: hashedPassword,
-                    id: savedUser.id,
                 });
+                // Enregistrer l'utilisateur
+                const savedUser = yield this.userRepository.save(user);
+                // Créer le parent en utilisant l'identifiant de l'utilisateur
+                const parent = new parents_entity_1.Parents(createPrentDto.username, createPrentDto.email, hashedPassword, createPrentDto.tel);
+                parent.id = savedUser.id;
+                parent.username = createPrentDto.username;
+                parent.tel = createPrentDto.tel;
+                parent.password = hashedPassword;
+                parent.email = createPrentDto.email;
+                // Enregistrer le parent
                 const savedParent = yield this.parentsRepository.save(parent);
+                // Créer le payload du token JWT
                 const payload = {
                     email: savedParent.email,
-                    sub: savedParent.id,
+                    sub: savedUser.id,
                     roleName: parentRole.name,
                 };
+                // Générer le token JWT
                 const token = yield this.jwtService.signAsync(payload, {
                     secret: jwtConstants_1.jwtConstants.secret,
                     expiresIn: '1h',
                 });
+                // Retourner l'entité parent et le token JWT
                 return {
                     parent: savedParent,
                     access_token: token,
@@ -116,12 +123,11 @@ let ParentsService = class ParentsService {
     createChildOrChildren(createChildrenDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log('createChildrenDto:', createChildrenDto);
                 const childrenToCreate = Array.isArray(createChildrenDto)
                     ? createChildrenDto
                     : [createChildrenDto];
                 const promises = childrenToCreate.map((createChildDto) => __awaiter(this, void 0, void 0, function* () {
-                    const parent = yield this.parentsRepository.findOne({
+                    const parent = yield this.userRepository.findOne({
                         where: { id: createChildDto.id_parent },
                     });
                     if (!parent) {
@@ -155,11 +161,17 @@ let ParentsService = class ParentsService {
                     child.username = createChildDto.username;
                     child.classe = createChildDto.classe;
                     child.password = hashedPassword;
-                    child.parents = parent;
+                    if (parent instanceof parents_entity_1.Parents) {
+                        child.parents = parent;
+                    }
                     child.id = savedUser.id;
                     child.email = `${createChildDto.username}${createChildDto.id_parent}`;
                     if (image) {
                         child.image = image.buffer.toString('base64');
+                    }
+                    else {
+                        const defaultImage = fs.readFileSync('src/parents/uploads/default_child_3.png');
+                        child.image = defaultImage.toString('base64');
                     }
                     return this.childRepository.save(child);
                 }));
@@ -173,12 +185,12 @@ let ParentsService = class ParentsService {
     findOne(idOrUsername) {
         return __awaiter(this, void 0, void 0, function* () {
             if (typeof idOrUsername === 'number') {
-                return yield this.parentsRepository.findOne({
+                return yield this.userRepository.findOne({
                     where: { id: idOrUsername },
                 });
             }
             else {
-                return yield this.parentsRepository.findOne({
+                return yield this.userRepository.findOne({
                     where: { username: idOrUsername },
                 });
             }
@@ -201,13 +213,13 @@ let ParentsService = class ParentsService {
     }
     updateChild(id, updateChildDto, image) {
         return __awaiter(this, void 0, void 0, function* () {
-            const child = yield this.childRepository.findOne({ where: { id: id } });
+            const child = yield this.userRepository.findOne({ where: { id: id } });
             if (!child) {
                 throw new common_1.NotFoundException("Child doesn't exist");
             }
             // Vérifier si le prénom est unique
             if (updateChildDto.username && updateChildDto.username !== child.username) {
-                const existingChild = yield this.childRepository.findOne({
+                const existingChild = yield this.userRepository.findOne({
                     where: { username: updateChildDto.username },
                 });
                 if (existingChild) {
@@ -216,7 +228,7 @@ let ParentsService = class ParentsService {
             }
             // Vérifier si l'identifiant (email) est unique
             if (updateChildDto.email && updateChildDto.email !== child.email) {
-                const existingChild = yield this.childRepository.findOne({
+                const existingChild = yield this.userRepository.findOne({
                     where: { email: updateChildDto.email },
                 });
                 if (existingChild) {
@@ -289,8 +301,8 @@ let ParentsService = class ParentsService {
         return __awaiter(this, void 0, void 0, function* () {
             const parent = yield this.parentsRepository.findOne({
                 where: { id: parentId },
-                relations: ['childs'], // Load the related children
             });
+            console.log(parent);
             if (!parent) {
                 throw new common_1.NotFoundException('Parent not found');
             }

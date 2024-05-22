@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from "@nestjs/core";
 import { AppModule } from './app.module';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
@@ -6,6 +6,7 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import helmet from 'helmet';
 import { jwtConstants } from './auth/jwtConstants';
+import { ClassSerializerInterceptor, ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,5 +31,8 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.use(cookieParser());
   await app.listen(3000);
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 }
 bootstrap();

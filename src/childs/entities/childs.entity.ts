@@ -16,4 +16,5 @@ export class Children extends User {
 
   @OneToOne(() => Back_pack, (backpack) => backpack.child)
   backpack: Back_pack;
+
 }
