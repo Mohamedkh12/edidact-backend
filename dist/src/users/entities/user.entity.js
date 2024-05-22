@@ -22,6 +22,7 @@ exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const bcrypt = require("bcrypt");
 const roles_entity_1 = require("../../roles/entities/roles.entity");
+const Codes_entity_1 = require("../../mail/PasswordRestCode/entite/Codes.entity");
 let User = class User {
     hashPassword() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -47,9 +48,13 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
 ], User.prototype, "roleId", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Codes_entity_1.Codes, (code) => code.user),
+    __metadata("design:type", Array)
+], User.prototype, "codes", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => roles_entity_1.Roles, (role) => role.users),
     (0, typeorm_1.JoinColumn)({ name: 'roleId' }),

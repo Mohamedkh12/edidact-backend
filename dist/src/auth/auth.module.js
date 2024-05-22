@@ -11,8 +11,6 @@ const common_1 = require("@nestjs/common");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const typeorm_1 = require("@nestjs/typeorm");
-const childs_entity_1 = require("../childs/entities/childs.entity");
-const parents_entity_1 = require("../parents/entities/parents.entity");
 const jwt_1 = require("@nestjs/jwt");
 const jwtConstants_1 = require("./jwtConstants");
 const passport_1 = require("@nestjs/passport");
@@ -23,19 +21,20 @@ const core_1 = require("@nestjs/core");
 const auth_guard_1 = require("./guards/auth.guard");
 const parents_module_1 = require("../parents/parents.module");
 const childs_module_1 = require("../childs/childs.module");
-const admin_entity_1 = require("../admin/entities/admin.entity");
-const admin_module_1 = require("../admin/admin.module");
+const user_entity_1 = require("../users/entities/user.entity");
+const users_module_1 = require("../users/users.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([childs_entity_1.Children, parents_entity_1.Parents, admin_entity_1.Admin]),
-            parents_module_1.ParentsModule,
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]),
+            users_module_1.UsersModule,
             childs_module_1.ChildsModule,
-            admin_module_1.AdminModule,
+            parents_module_1.ParentsModule,
             jwt_1.JwtModule.register({
+                global: true,
                 secret: jwtConstants_1.jwtConstants.secret,
                 signOptions: { expiresIn: '60m' },
             }),

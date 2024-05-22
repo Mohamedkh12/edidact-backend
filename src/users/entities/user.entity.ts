@@ -3,15 +3,13 @@ import {
   Column,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
-  Unique,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Roles } from '../../roles/entities/roles.entity';
-import { Exercises } from '../../exercises/entities/exercises.entity';
+import { Codes } from '../../mail/PasswordRestCode/entite/Codes.entity';
 
 @Entity('users')
 export class User {
@@ -27,8 +25,10 @@ export class User {
   @Column({ type: 'text' })
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   roleId: number;
+  @OneToMany(() => Codes, (code) => code.user)
+  codes: Codes[];
 
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'roleId' })

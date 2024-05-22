@@ -25,15 +25,14 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const public_decorator_1 = require("./decorators/public.decorator");
-const refreshToken_strategy_1 = require("./strategy/refreshToken.strategy");
+const jwt_auth_guards_1 = require("./strategy/jwt-auth.guards");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    signIn(signInDto) {
+    signIn(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { email, password } = signInDto;
-            return yield this.authService.signIn(email, password);
+            return this.authService.signIn(email, password);
         });
     }
     refreshToken(refreshToken) {
@@ -47,31 +46,19 @@ let AuthController = class AuthController {
             return { message: 'Logged out successfully' };
         });
     }
-    getUserRole(authHeader) {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log('authHeader', authHeader);
-            if (!authHeader) {
-                return { role: null };
-            }
-            const token = authHeader.split(' ')[1]; // Extraction du token depuis l'en-tête Authorization
-            console.log('token', token);
-            const role = yield this.authService.checkUserRole(token);
-            console.log('role', role);
-            return { role };
-        });
-    }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('login'),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Body)('email')),
+    __param(1, (0, common_1.Body)('password')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signIn", null);
 __decorate([
-    (0, common_1.UseGuards)(refreshToken_strategy_1.JwtRefreshTokenStrategy),
+    (0, common_1.UseGuards)(jwt_auth_guards_1.JwtAuthGuards),
     (0, common_1.Post)('refreshToken'),
     __param(0, (0, common_1.Body)('refresh_Token')),
     __metadata("design:type", Function),
@@ -86,14 +73,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
-__decorate([
-    (0, public_decorator_1.Public)(),
-    (0, common_1.Get)('userRole'),
-    __param(0, (0, common_1.Headers)('Authorization')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "getUserRole", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

@@ -9,7 +9,7 @@ import { Admin } from '../admin/entities/admin.entity';
 
 @Injectable()
 export class MailService {
-  private transporter;
+  /*private transporter;
 
   constructor(
     @InjectRepository(Codes)
@@ -64,7 +64,7 @@ export class MailService {
           parent: { id: parent.id },
         });
         return code;
-      } else if (admin) {
+      } /*else if (admin) {
         // Enregistrement du code avec l'identifiant de l'admin trouvé
         await this.codeRepository.save({
           code: code,
@@ -72,8 +72,6 @@ export class MailService {
           dateExpiration: dateExpiration,
           admin: { id: admin.id },
         });
-        return code;
-      }
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 heures en millisecondes
       await this.codeRepository.delete({
         dateCreation: LessThan(twentyFourHoursAgo),
@@ -257,5 +255,5 @@ export class MailService {
       console.error('Error resetting password:', error);
       throw error;
     }
-  }
+  }*/
 }

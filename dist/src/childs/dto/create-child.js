@@ -55,11 +55,6 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], CreateChildDto.prototype, "roleId", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
 ], CreateChildDto.prototype, "id_parent", void 0);
 __decorate([
     (0, typeorm_1.BeforeInsert)(),

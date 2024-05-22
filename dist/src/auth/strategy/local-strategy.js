@@ -25,14 +25,14 @@ const auth_service_1 = require("../auth.service");
 const common_1 = require("@nestjs/common");
 let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)(passport_local_1.Strategy) {
     constructor(authService) {
-        super();
+        super({ usernameField: 'email' }); // Indique que le champ 'username' est en fait 'email'
         this.authService = authService;
     }
     validate(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.authService.validateUser(email, password);
             if (!user) {
-                throw new common_1.UnauthorizedException();
+                throw new common_1.UnauthorizedException('Invalid email or password');
             }
             return user;
         });

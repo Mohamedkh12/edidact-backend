@@ -3,137 +3,92 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Children } from '../childs/entities/childs.entity';
-import { Parents } from '../parents/entities/parents.entity';
-import { Admin } from '../admin/entities/admin.entity';
+import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(Children)
-    private childRepository: Repository<Children>,
-    @InjectRepository(Parents)
-    private parentRepository: Repository<Parents>,
-    @InjectRepository(Admin)
-    private adminRepository: Repository<Admin>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private userService: UsersService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    // Vérifiez si l'utilisateur existe dans la table des parents
-    const parent = await this.parentRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
 
-    if (parent && (await bcrypt.compare(password, parent.password))) {
-      const { password, ...result } = parent;
-      return result;
+    console.log('Utilisateur:', user);
+    if (user) {
+      console.log('Mot de passe fourni:', password);
+      console.log('Mot de passe stocké (haché):', user.password);
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (isPasswordValid) {
+        const { password, ...result } = user;
+        return result;
+      } else {
+        console.log('Mot de passe invalide');
+      }
+    } else {
+      console.log('Utilisateur non trouvé');
     }
-
-    // Vérifiez si l'utilisateur existe dans la table des enfants
-    const child = await this.childRepository.findOne({ where: { email } });
-
-    if (child && (await bcrypt.compare(password, child.password))) {
-      const { password, ...result } = child;
-      return result;
-    }
-
-    // Vérifiez si l'utilisateur existe dans la table des admins
-    const admin = await this.adminRepository.findOne({ where: { email } });
-
-    if (admin && (await bcrypt.compare(password, admin.password))) {
-      const { password, ...result } = admin;
-      return result;
-    }
-
-    // Si ni le parent, ni l'enfant, ni l'admin n'est trouvé, retournez null
     return null;
   }
 
-  async signIn(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string; user: Children | Parents | Admin }> {
-    let parent = await this.parentRepository
-      .createQueryBuilder('Parents')
-      .leftJoinAndSelect('Parents.roles', 'roles')
-      .where('Parents.email = :email', { email })
+  async signIn(email: string, password: string): Promise<{ access_token: string; user: User }> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'roles')
+      .where('user.email = :email', { email })
+      .addSelect('user.password')
       .addSelect('roles.name')
       .getOne();
 
-    console.log('parent:', parent);
-    let child = null;
-
-    if (!parent) {
-      child = await this.childRepository
-        .createQueryBuilder('child')
-        .leftJoinAndSelect('child.roles', 'roles')
-        .where('child.email = :email', { email })
-        .addSelect('roles.name')
-        .getOne();
+    if (!user) {
+      throw new UnauthorizedException('Email ou mot de passe invalide');
     }
 
-    let admin = null;
-    if (!parent && !child) {
-      admin = await this.adminRepository
-        .createQueryBuilder('Admin')
-        .leftJoinAndSelect('Admin.roles', 'roles')
-        .where('Admin.email = :email', { email })
-        .addSelect('roles.name')
-        .getOne();
-    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    console.log('admin:', admin);
-
-    const entity = parent || child || admin;
-
-    if (!entity) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, entity.password);
-
-    console.log('entity:', entity);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Email ou mot de passe invalide');
     }
 
     const payload = {
-      email: entity.email,
-      sub: entity.id,
-      roleName: entity.roles ? entity.roles.name : null,
+      email: user.email,
+      sub: user.id,
+      roleName: user.roles ? user.roles.name : null,
     };
 
-    console.log('payload:', payload);
     const accessToken = this.jwtService.sign(payload);
 
-    return { access_token: accessToken, user: entity };
+    return { access_token: accessToken, user };
   }
-
   async refreshToken(refreshToken: string): Promise<{ refresh_Token: string }> {
     try {
       const decoded = this.jwtService.verify(refreshToken);
 
+      const user = await this.userRepository.findOne({
+        where: { email: decoded.email },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Jeton de rafraîchissement invalide');
+      }
+
       const payload = {
-        email: decoded.email,
-        sub: decoded.sub,
-        roleName: decoded.roleName,
+        email: user.email,
+        sub: user.id,
+        roleName: user.roles ? user.roles.name : null,
       };
 
-      return { refresh_Token: this.jwtService.sign(payload) };
+      return {
+        refresh_Token: this.jwtService.sign(payload, { expiresIn: '1d' }),
+      };
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-  }
-
-  async checkUserRole(token: string): Promise<string | null> {
-    try {
-      const decoded = this.jwtService.verify(token);
-      console.log('decoded token :', decoded);
-      console.log('decoded.roleName:', decoded.roleName);
-      return decoded.roleName || null;
-    } catch (error) {
-      // Si le token est invalide ou expiré
-      console.error('Invalid token:', error);
-      return null;
+      throw new UnauthorizedException('Jeton de rafraîchissement invalide');
     }
   }
 

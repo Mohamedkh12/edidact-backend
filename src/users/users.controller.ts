@@ -45,9 +45,9 @@ export class UsersController {
   }
 
   @Public()
-  @Get('/findByusername/:username')
-  async findOneByUsername(@Param('username') username: string): Promise<User> {
-    return await this.usersService.findOneByusername(username);
+  @Post('/findOneByemail')
+  async findOneByemail(@Body('email') email: string): Promise<User> {
+    return await this.usersService.findOneByemail(email);
   }
   @Roles('Parent', 'Admin')
   @UseGuards(JwtAuthGuards)

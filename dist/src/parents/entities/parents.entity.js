@@ -15,10 +15,14 @@ const user_entity_1 = require("../../users/entities/user.entity");
 const childs_entity_1 = require("../../childs/entities/childs.entity");
 Object.defineProperty(exports, "Children", { enumerable: true, get: function () { return childs_entity_1.Children; } });
 const back_pack_entity_1 = require("../../back-pack/entities/back_pack.entity");
-const Codes_entity_1 = require("../../mail/PasswordRestCode/entite/Codes.entity");
+const class_transformer_1 = require("class-transformer");
 let Parents = class Parents extends user_entity_1.User {
 };
 exports.Parents = Parents;
+__decorate([
+    (0, class_transformer_1.Exclude)(),
+    __metadata("design:type", Number)
+], Parents.prototype, "roleId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'integer' }),
     __metadata("design:type", Number)
@@ -31,10 +35,6 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => back_pack_entity_1.Back_pack, (backpack) => backpack.parent),
     __metadata("design:type", Array)
 ], Parents.prototype, "backpacks", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => Codes_entity_1.Codes, (code) => code.parent),
-    __metadata("design:type", Array)
-], Parents.prototype, "codes", void 0);
 exports.Parents = Parents = __decorate([
     (0, typeorm_1.Entity)('parents')
 ], Parents);

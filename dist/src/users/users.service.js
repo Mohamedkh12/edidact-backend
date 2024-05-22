@@ -106,10 +106,10 @@ let UsersService = class UsersService {
             }
         });
     }
-    findOneByusername(username) {
+    findOneByemail(email) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.usersRepository.findOne({
-                where: { username: username },
+                where: { email: email },
             });
         });
     }

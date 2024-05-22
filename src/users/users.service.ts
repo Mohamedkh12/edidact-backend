@@ -111,9 +111,9 @@ export class UsersService {
     }
   }
 
-  async findOneByusername(username: string) {
+  async findOneByemail(email: string) {
     return await this.usersRepository.findOne({
-      where: { username: username },
+      where: { email: email },
     });
   }
 
