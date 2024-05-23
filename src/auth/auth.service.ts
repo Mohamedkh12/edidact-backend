@@ -36,21 +36,43 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<{ access_token: string; user: User }> {
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['roles', 'parents', 'children'],
+    });
+
     if (!user) {
       throw new UnauthorizedException('Email invalide');
     }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Mot de passe invalide');
     }
 
-    const payload = {
-      email: user.email,
-      sub: user.id,
-      roleName: user.roles ? user.roles.name : null,
-    };
+    let payload = null;
 
+    if (user.roles.name === 'Parent' && user.parents) {
+      payload = {
+        email: user.email,
+        sub: user.parents.id,
+        roleName: user.roles ? user.roles.name : null,
+        parentId: user.id,
+      };
+    } else if (user.roles.name === 'Child' && user.children) {
+      payload = {
+        email: user.email,
+        sub: user.id,
+        roleName: user.roles ? user.roles.name : null,
+        childId: user.children.id,
+      };
+    }else
+      payload = {
+        email: user.email,
+        sub: user.id,
+        roleName: user.roles ? user.roles.name : null,
+      };
+    console.log(payload);
     const accessToken = this.jwtService.sign(payload);
 
     return { access_token: accessToken, user };

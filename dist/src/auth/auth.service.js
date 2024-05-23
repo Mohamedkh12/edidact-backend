@@ -68,7 +68,10 @@ let AuthService = class AuthService {
     }
     signIn(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findOne({ where: { email } });
+            const user = yield this.userRepository.findOne({
+                where: { email },
+                relations: ['roles', 'parents', 'children'],
+            });
             if (!user) {
                 throw new common_1.UnauthorizedException('Email invalide');
             }
@@ -76,11 +79,30 @@ let AuthService = class AuthService {
             if (!isPasswordValid) {
                 throw new common_1.UnauthorizedException('Mot de passe invalide');
             }
-            const payload = {
-                email: user.email,
-                sub: user.id,
-                roleName: user.roles ? user.roles.name : null,
-            };
+            let payload = null;
+            if (user.roles.name === 'Parent' && user.parents) {
+                payload = {
+                    email: user.email,
+                    sub: user.parents.id,
+                    roleName: user.roles ? user.roles.name : null,
+                    parentId: user.id,
+                };
+            }
+            else if (user.roles.name === 'Child' && user.children) {
+                payload = {
+                    email: user.email,
+                    sub: user.id,
+                    roleName: user.roles ? user.roles.name : null,
+                    childId: user.children.id,
+                };
+            }
+            else
+                payload = {
+                    email: user.email,
+                    sub: user.id,
+                    roleName: user.roles ? user.roles.name : null,
+                };
+            console.log(payload);
             const accessToken = this.jwtService.sign(payload);
             return { access_token: accessToken, user };
         });

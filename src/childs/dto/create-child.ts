@@ -4,6 +4,8 @@ import { BeforeInsert } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 export class CreateChildDto {
+  @IsNumber()
+  id: number;
   @IsNotEmpty()
   @IsString()
   username: string;

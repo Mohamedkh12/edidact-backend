@@ -23,6 +23,8 @@ const typeorm_1 = require("typeorm");
 const bcrypt = require("bcrypt");
 const roles_entity_1 = require("../../roles/entities/roles.entity");
 const Codes_entity_1 = require("../../mail/PasswordRestCode/entite/Codes.entity");
+const childs_entity_1 = require("../../childs/entities/childs.entity");
+const parents_entity_1 = require("../../parents/entities/parents.entity");
 let User = class User {
     hashPassword() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -60,6 +62,14 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'roleId' }),
     __metadata("design:type", roles_entity_1.Roles)
 ], User.prototype, "roles", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => parents_entity_1.Parents, (parent) => parent.user),
+    __metadata("design:type", parents_entity_1.Parents)
+], User.prototype, "parents", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => childs_entity_1.Children, (child) => child.user),
+    __metadata("design:type", childs_entity_1.Children)
+], User.prototype, "children", void 0);
 __decorate([
     (0, typeorm_1.BeforeInsert)(),
     __metadata("design:type", Function),

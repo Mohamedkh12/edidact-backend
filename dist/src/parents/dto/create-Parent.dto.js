@@ -18,8 +18,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateUserDto = exports.CreatePrentDto = void 0;
-const mapped_types_1 = require("@nestjs/mapped-types");
+exports.CreatePrentDto = void 0;
 const class_validator_1 = require("class-validator");
 const typeorm_1 = require("typeorm");
 const bcrypt = require("bcrypt");
@@ -36,18 +35,22 @@ __decorate([
     __metadata("design:type", Number)
 ], CreatePrentDto.prototype, "id", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePrentDto.prototype, "username", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreatePrentDto.prototype, "email", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePrentDto.prototype, "password", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreatePrentDto.prototype, "tel", void 0);
@@ -57,7 +60,4 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], CreatePrentDto.prototype, "hashPassword", null);
-class UpdateUserDto extends (0, mapped_types_1.PartialType)(CreatePrentDto) {
-}
-exports.UpdateUserDto = UpdateUserDto;
 //# sourceMappingURL=create-Parent.dto.js.map

@@ -4,12 +4,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
+  OneToMany, OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Roles } from '../../roles/entities/roles.entity';
 import { Codes } from '../../mail/PasswordRestCode/entite/Codes.entity';
+import { Children } from '../../childs/entities/childs.entity';
+import { Parents } from '../../parents/entities/parents.entity';
 
 @Entity('users')
 export class User {
@@ -33,6 +35,12 @@ export class User {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'roleId' })
   roles: Roles;
+
+  @OneToOne(() => Parents, (parent) => parent.user)
+  parents: Parents;
+
+  @OneToOne(() => Children, (child) => child.user)
+  children: Children;
 
   @BeforeInsert()
   async hashPassword() {
