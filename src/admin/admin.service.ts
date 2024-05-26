@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Parents } from '../parents/entities/parents.entity';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from '../auth/jwtConstants';
+import { Exercises } from '../exercises/entities/exercises.entity';
 
 @Injectable()
 export class AdminService {
@@ -13,6 +14,8 @@ export class AdminService {
     private childRepository: Repository<Children>,
     @InjectRepository(Parents)
     private parentsRepository: Repository<Parents>,
+    @InjectRepository(Exercises)
+    private exercisesRepository: Repository<Exercises>,
     private jwtService: JwtService,
   ) {}
   async createAdminToken(username: string, password: string): Promise<string> {
@@ -59,5 +62,28 @@ export class AdminService {
   }
   async findAllParent(): Promise<Parents[]> {
     return await this.parentsRepository.find();
+  }
+
+  async showExercice(): Promise<Exercises[]> {
+    return this.exercisesRepository.find({
+      where: {
+        active: '1',
+      },
+    });
+  }
+
+  async changeExerciseStatus(
+    exerciseId: number,
+    newStatus: string,
+  ): Promise<Exercises> {
+    const exercise = await this.exercisesRepository.findOne({
+      where: { id: exerciseId },
+    });
+    if (!exercise) {
+      throw new Error(`L'exercice avec l'ID ${exerciseId} n'existe pas.`);
+    }
+    exercise.active = newStatus;
+    console.log(newStatus);
+    return this.exercisesRepository.save(exercise);
   }
 }

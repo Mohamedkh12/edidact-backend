@@ -20,25 +20,73 @@ __decorate([
     __metadata("design:type", Number)
 ], Exercises.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'integer', nullable: true }),
+    __metadata("design:type", Number)
+], Exercises.prototype, "week", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "domaine", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "degree", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
     __metadata("design:type", String)
 ], Exercises.prototype, "category", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
     __metadata("design:type", String)
-], Exercises.prototype, "image", void 0);
+], Exercises.prototype, "sub_category", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "sub_sub_category", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "sub_sub_sub_category", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
 ], Exercises.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
     __metadata("design:type", String)
-], Exercises.prototype, "description", void 0);
+], Exercises.prototype, "link", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
     __metadata("design:type", String)
-], Exercises.prototype, "assignment", void 0);
+], Exercises.prototype, "objective", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "code", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "trail", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Exercises.prototype, "active", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }),
+    __metadata("design:type", Date)
+], Exercises.prototype, "created_at", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp' }),
+    __metadata("design:type", Date)
+], Exercises.prototype, "updated_at", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+        nullable: true,
+    }),
+    __metadata("design:type", Date)
+], Exercises.prototype, "deleted_at", void 0);
 __decorate([
     (0, typeorm_1.ManyToMany)(() => back_pack_entity_1.Back_pack, (backpack) => backpack.exercises, {
         cascade: true,

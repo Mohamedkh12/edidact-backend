@@ -17,8 +17,6 @@ const typeorm_1 = require("@nestjs/typeorm");
 const Codes_entity_1 = require("./PasswordRestCode/entite/Codes.entity");
 const childs_module_1 = require("../childs/childs.module");
 const roles_module_1 = require("../roles/roles.module");
-const admin_module_1 = require("../admin/admin.module");
-const admin_service_1 = require("../admin/admin.service");
 let MailModule = class MailModule {
 };
 exports.MailModule = MailModule;
@@ -29,11 +27,10 @@ exports.MailModule = MailModule = __decorate([
             parents_module_1.ParentsModule,
             childs_module_1.ChildsModule,
             roles_module_1.RolesModule,
-            admin_module_1.AdminModule,
             typeorm_1.TypeOrmModule.forFeature([Codes_entity_1.Codes]),
         ],
         controllers: [mail_controller_1.MailController],
-        providers: [mail_service_1.MailService, parents_service_1.ParentsService, admin_service_1.AdminService],
+        providers: [mail_service_1.MailService, parents_service_1.ParentsService],
     })
 ], MailModule);
 //# sourceMappingURL=mail.module.js.map

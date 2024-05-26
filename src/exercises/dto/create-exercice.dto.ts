@@ -3,6 +3,50 @@ import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateExerciseDto {
   @IsNotEmpty()
+  @IsNumber()
+  week: number;
+
+  @IsNotEmpty()
+  @IsString()
+  domaine: string;
+
+  @IsNotEmpty()
+  @IsString()
+  degree: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sub_category: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sub_sub_category: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sub_sub_sub_category: string;
+
+  @IsNotEmpty()
+  @IsString()
+  trail: string;
+
+  @IsNotEmpty()
+  @IsString()
+  code: string;
+
+  @IsNotEmpty()
+  @IsString()
+  active: string;
+
+  @IsNotEmpty()
+  @IsString()
+  objective: string;
+
+  @IsNotEmpty()
+  @IsString()
+  link: string;
+
+  @IsNotEmpty()
   @IsString()
   category: string;
 
@@ -15,13 +59,12 @@ export class CreateExerciseDto {
   name: string;
 
   @IsNotEmpty()
-  @IsString()
-  description: string;
+  created_at: Date;
 
   @IsNotEmpty()
-  @IsString()
-  assignment: string;
+  updated_at: Date;
 
+  deleted_at: Date;
   @IsNotEmpty()
   @IsNumber()
   ChildId: number;

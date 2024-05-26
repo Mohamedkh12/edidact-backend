@@ -235,10 +235,9 @@ export class ParentsService {
       throw new NotFoundException("Child doesn't exist");
     }
 
-
     // Vérifier si l'identifiant (email) est unique
     if (updateChildDto.email && updateChildDto.email !== child.email) {
-      const existingChild = await this.userRepository.findOne({
+      const existingChild = await this.childRepository.findOne({
         where: { email: updateChildDto.email },
       });
       if (existingChild) {
@@ -247,8 +246,6 @@ export class ParentsService {
         );
       }
     }
-
-    // Mettre à jour l'image si elle est fournie
     if (image) {
       updateChildDto.image = image.buffer.toString('base64');
     }
@@ -305,7 +302,6 @@ export class ParentsService {
     // Retourner le parent (ce n'est pas nécessaire de supprimer le parent ici)
     return parent;
   }
-
 
   async getParentFromToken(token: string): Promise<Parents | null> {
     try {

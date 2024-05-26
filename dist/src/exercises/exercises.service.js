@@ -59,12 +59,24 @@ let ExercisesService = class ExercisesService {
             }
             const newExercise = new exercises_entity_1.Exercises();
             newExercise.name = createExerciseDto.name;
-            newExercise.assignment = createExerciseDto.assignment;
+            newExercise.week = createExerciseDto.week;
             newExercise.category = createExerciseDto.category;
-            newExercise.description = createExerciseDto.description;
-            if (image) {
-                newExercise.image = image.buffer.toString('base64');
-            }
+            newExercise.domaine = createExerciseDto.domaine;
+            newExercise.degree = createExerciseDto.degree;
+            newExercise.sub_category = createExerciseDto.sub_category;
+            newExercise.sub_sub_category = createExerciseDto.sub_sub_category;
+            newExercise.sub_sub_sub_category = createExerciseDto.sub_sub_sub_category;
+            newExercise.trail = createExerciseDto.trail;
+            newExercise.code = createExerciseDto.code;
+            newExercise.active = createExerciseDto.active;
+            newExercise.objective = createExerciseDto.objective;
+            newExercise.link = createExerciseDto.link;
+            newExercise.created_at = createExerciseDto.created_at;
+            newExercise.updated_at = createExerciseDto.updated_at;
+            newExercise.deleted_at = createExerciseDto.deleted_at;
+            /*if (image) {
+              newExercise.image = image.buffer.toString('base64');
+            }*/
             console.log(newExercise);
             return yield this.exercisesRepository.save(newExercise);
         });
@@ -128,11 +140,11 @@ let ExercisesService = class ExercisesService {
                 'exercise.image',
             ])
                 .getMany();
-            if (image) {
-                exercises.forEach((exercise) => {
-                    exercise.image = image.buffer.toString('base64');
-                });
-            }
+            /* if (image) {
+              exercises.forEach((exercise) => {
+                exercise.image = image.buffer.toString('base64');
+              });
+            }*/
             console.log(exercises);
             return exercises;
         });

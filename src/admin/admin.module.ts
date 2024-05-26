@@ -8,6 +8,8 @@ import { RolesModule } from '../roles/roles.module';
 import { ChildsModule } from '../childs/childs.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { ExercisesModule } from '../exercises/exercises.module';
+import { ExercisesService } from '../exercises/exercises.service';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
     ParentsModule,
     RolesModule,
     ChildsModule,
+    ExercisesModule,
     PassportModule.register({ session: true }),
     JwtModule.register({
       secret: 'SECRET-CODE142&of',
@@ -23,7 +26,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AdminController],
-  providers: [AdminService],
+  providers: [AdminService, ExercisesService],
   exports: [AdminService, TypeOrmModule],
 })
 export class AdminModule {}

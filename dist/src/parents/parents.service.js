@@ -220,14 +220,13 @@ let ParentsService = class ParentsService {
             }
             // Vérifier si l'identifiant (email) est unique
             if (updateChildDto.email && updateChildDto.email !== child.email) {
-                const existingChild = yield this.userRepository.findOne({
+                const existingChild = yield this.childRepository.findOne({
                     where: { email: updateChildDto.email },
                 });
                 if (existingChild) {
                     throw new common_1.BadRequestException("L'identifiant existe déjà pour un autre enfant");
                 }
             }
-            // Mettre à jour l'image si elle est fournie
             if (image) {
                 updateChildDto.image = image.buffer.toString('base64');
             }

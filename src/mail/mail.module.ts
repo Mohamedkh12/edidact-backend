@@ -8,8 +8,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Codes } from './PasswordRestCode/entite/Codes.entity';
 import { ChildsModule } from '../childs/childs.module';
 import { RolesModule } from '../roles/roles.module';
-import { AdminModule } from '../admin/admin.module';
-import { AdminService } from '../admin/admin.service';
 
 @Module({
   imports: [
@@ -17,10 +15,9 @@ import { AdminService } from '../admin/admin.service';
     ParentsModule,
     ChildsModule,
     RolesModule,
-    AdminModule,
     TypeOrmModule.forFeature([Codes]),
   ],
   controllers: [MailController],
-  providers: [MailService, ParentsService, AdminService],
+  providers: [MailService, ParentsService],
 })
 export class MailModule {}
