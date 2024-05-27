@@ -20,8 +20,8 @@ import { CreateExerciseDto } from './dto/create-exercice.dto';
 import { ExercisesService } from './exercises.service';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { Public } from '../auth/decorators/public.decorator';
+import { Exercises } from './entities/exercises.entity';
 
-const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 2 * 1024 * 1024;
 @Controller('exercises')
 export class ExercisesController {
   constructor(private readonly exercisesService: ExercisesService) {}
@@ -51,14 +51,8 @@ export class ExercisesController {
   @UseInterceptors(FileInterceptor('image'))
   async createExercise(
     @Body() createExerciseDto: CreateExerciseDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
-    image,
   ) {
-    return this.exercisesService.createExercise(createExerciseDto, image);
+    return this.exercisesService.createExercise(createExerciseDto);
   }
 
   @UseGuards(JwtAuthGuards, RolesGuard)
@@ -68,14 +62,8 @@ export class ExercisesController {
   async updateExercise(
     @Param('id') id: number,
     @Body() updateExerciseDto: CreateExerciseDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
-    image,
   ) {
-    return this.exercisesService.updateExercise(id, updateExerciseDto, image);
+    return this.exercisesService.updateExercise(id, updateExerciseDto);
   }
 
   @UseGuards(JwtAuthGuards, RolesGuard)
@@ -105,11 +93,10 @@ export class ExercisesController {
   @Get('byCategory')
   async getExercisesByCategory(
     @Query('category') category: string,
-    @UploadedFile() imageFile,
   ) {
     try {
       const exercisesByCategory =
-        await this.exercisesService.getExercisesByCategory(category, imageFile);
+        await this.exercisesService.getExercisesByCategory(category);
       return exercisesByCategory;
     } catch (error) {
       return {
@@ -136,9 +123,52 @@ export class ExercisesController {
   }
 
   @UseGuards(JwtAuthGuards, RolesGuard)
-  @Roles('Parent', 'Admin', 'Child')
-  @Get('classeCategory')
-  async getCategoriesByClass(@Query('classe') classe: string): Promise<any> {
-    return this.exercisesService.getCategoriesByClass(classe);
+  @Roles('Admin')
+  @Get('getAllClass')
+  async getAllClass() {
+    const Class = await this.exercisesService.getAllClasses()
+    return Class;
+  }
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Admin')
+  @Get('categories-by-class')
+  async getCategoriesByClass() {
+    const SubcategoriesByClass = await this.exercisesService.getCategoriesByClass();
+    return SubcategoriesByClass;
+  }
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Admin')
+  @Get('SubCategories-by-categories')
+  async getSubCategoryByCategory() {
+    const categoriesByClass = await this.exercisesService.getSubCategoryByCategory();
+    return categoriesByClass;
+  }
+
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Admin')
+  @Get('SubCategories-by-exercice')
+  async getExercisesBySubCategory(
+    @Query("classParam") classParam: string,
+    @Query("category") category: string,
+    @Query("subCategory") subCategory: string
+  ) {
+    const exercises = await this.exercisesService.getExercisesBySubCategory(classParam, category, subCategory);
+    return exercises;
+  }
+  @Public()
+  @Get('showExercice')
+  async showExercice(): Promise<Exercises[]> {
+    return await this.showExercice();
+  }
+
+  @Public()
+  @Patch('changeExerciseStatus')
+  async changeExerciseStatus(
+    @Body('exerciseId') exerciseId: number,
+    @Body('newStatus') newStatus: string,
+  ): Promise<Exercises> {
+    return await this.changeExerciseStatus(exerciseId, newStatus);
   }
 }

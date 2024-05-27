@@ -2,13 +2,18 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateExerciseDto {
-  @IsNotEmpty()
-  @IsString()
-  category: string;
 
   @IsNotEmpty()
   @IsString()
-  image: string;
+  class: string;
+
+  @IsNotEmpty()
+  @IsString()
+  category: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  sub_category: string;
 
   @IsNotEmpty()
   @IsString()
@@ -16,12 +21,23 @@ export class CreateExerciseDto {
 
   @IsNotEmpty()
   @IsString()
-  description: string;
+  active: string;
 
   @IsNotEmpty()
   @IsString()
-  assignment: string;
+  link: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  objective: string;
+  
+  @IsNotEmpty()
+  created_at: Date;
 
+  @IsNotEmpty()
+  updated_at: Date;
+
+  deleted_at: Date;
   @IsNotEmpty()
   @IsNumber()
   ChildId: number;

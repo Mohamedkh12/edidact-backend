@@ -105,7 +105,7 @@ export class MailService {
         .where('id = :id', { id: existingCode.user.id })
         .execute();
 
-      console.log('Password reset successfully');
+      console.log(newPassword);
     } catch (error) {
       console.error('Error resetting password:', error);
       throw error;

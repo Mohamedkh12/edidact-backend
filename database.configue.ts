@@ -16,7 +16,7 @@ export const databaseConfig: DataSourceOptions = {
   password: 'edidact_S3cret',
   database: 'edidact_db',
   entities: [User, Back_pack, Roles, Exercises, Children, Codes, Parents],
-  synchronize: true,
+  synchronize: false,
 };
 const dataSource = new DataSource(databaseConfig);
 export default dataSource;

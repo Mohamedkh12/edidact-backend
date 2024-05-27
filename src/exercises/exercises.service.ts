@@ -1,3 +1,5 @@
+// @ts-ignore
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -31,7 +33,6 @@ export class ExercisesService {
 
   async createExercise(
     createExerciseDto: CreateExerciseDto,
-    image: Express.Multer.File,
   ): Promise<Exercises> {
     const existingExercise = await this.exercisesRepository.findOne({
       where: { name: createExerciseDto.name },
@@ -42,13 +43,17 @@ export class ExercisesService {
     }
 
     const newExercise = new Exercises();
-    newExercise.name = createExerciseDto.name;
-    newExercise.assignment = createExerciseDto.assignment;
+    newExercise.class = createExerciseDto.class;
     newExercise.category = createExerciseDto.category;
-    newExercise.description = createExerciseDto.description;
-    if (image) {
-      newExercise.image = image.buffer.toString('base64');
-    }
+    newExercise.sub_category = createExerciseDto.sub_category;
+    newExercise.name = createExerciseDto.name;
+    newExercise.link = createExerciseDto.link;
+    newExercise.objective = createExerciseDto.objective;
+    newExercise.active = createExerciseDto.active;
+    newExercise.created_at = createExerciseDto.created_at;
+    newExercise.updated_at = createExerciseDto.updated_at;
+    newExercise.deleted_at = createExerciseDto.deleted_at;
+   
     console.log(newExercise);
     return await this.exercisesRepository.save(newExercise);
   }
@@ -56,16 +61,12 @@ export class ExercisesService {
   async updateExercise(
     id: number,
     updateExerciseDto: CreateExerciseDto,
-    image: Express.Multer.File,
   ): Promise<Exercises> {
     const exercise = await this.getExerciseById(id);
     if (!exercise) {
       throw new NotFoundException("exercice doesn't exist");
     }
 
-    if (image) {
-      updateExerciseDto.image = image.buffer.toString('base64');
-    }
     Object.assign(exercise, updateExerciseDto);
     return this.exercisesRepository.save(exercise);
   }
@@ -99,25 +100,14 @@ export class ExercisesService {
   }
 
   //afficher les exercices par categories
-  async getExercisesByCategory(category: string, image): Promise<Exercises[]> {
+  async getExercisesByCategory(category: string): Promise<Exercises[]> {
     console.log(category);
     const exercises = await this.exercisesRepository
       .createQueryBuilder('exercise')
       .where('exercise.category = :category', { category })
-      .select([
-        'exercise.id',
-        'exercise.name',
-        'exercise.assignment',
-        'exercise.category',
-        'exercise.description',
-        'exercise.image',
-      ])
+      .select('*')
       .getMany();
-    if (image) {
-      exercises.forEach((exercise) => {
-        exercise.image = image.buffer.toString('base64');
-      });
-    }
+   
     console.log(exercises);
     return exercises;
   }
@@ -131,33 +121,87 @@ export class ExercisesService {
 
     return exerciseCount;
   }
-
-  async getCategoriesByClass(classe: string): Promise<any> {
+  
+  async getAllClasses(): Promise<string[]> {
     try {
-      const results = await this.exercisesRepository
+      const classes = await this.exercisesRepository
         .createQueryBuilder('exercise')
-        .innerJoinAndSelect('exercise.Children', 'child')
-        .where('child.classe = :classe', { classe })
-        .select(['child.classe AS class', 'exercise.category AS category'])
-        .groupBy('child.classe, exercise.category')
+        .select('DISTINCT exercise.class')
         .getRawMany();
 
-      // Group categories by class
-      const groupedCategories = results.reduce(
-        (acc, { class: classKey, category }) => {
-          if (!acc[classKey]) {
-            acc[classKey] = [];
-          }
-          acc[classKey].push(category);
-          return acc;
-        },
-        {},
-      );
-
-      return groupedCategories;
+      return classes.map((exercise) => exercise.class);
     } catch (error) {
-      console.error('Error fetching categories by class:', error);
+      console.error('Error fetching classes:', error);
       throw error;
     }
+  }
+  async getCategoriesByClass(): Promise<any> {
+    const exercises = await this.exercisesRepository.find();
+
+    const result = exercises.reduce((acc, exercise) => {
+      if (!acc[exercise.class]) {
+        acc[exercise.class] = new Set();
+      }
+      acc[exercise.class].add(exercise.category);
+      return acc;
+    }, {});
+
+    // Convert sets to arrays
+    for (const key in result) {
+      result[key] = Array.from(result[key]);
+    }
+
+    return result;
+  }
+  
+  async getSubCategoryByCategory():Promise<any>{
+    const exercises = await this.exercisesRepository.find();
+    
+    const result = exercises.reduce((acc, exercise)=>{
+      if  (!acc[exercise.category]) {
+        acc[exercise.category] = new Set();
+      }
+      acc[exercise.category].add(exercise.sub_category)
+      return acc
+    },{});
+
+    for (const key in result) {
+      result[key] = Array.from(result[key]);
+    }
+    
+    return result
+  }
+  async getExercisesBySubCategory(classParam: string, category: string, subCategory: string): Promise<Exercises[]> {
+    try {
+      const exercises = await this.exercisesRepository.find({ where: { class: classParam, sub_category: subCategory, category: category } });
+      return exercises;
+    } catch (error) {
+      console.error('Error fetching exercises by sub-category:', error);
+      throw error;
+    }
+  }
+
+
+async showExercice(): Promise<Exercises[]> {
+    return this.exercisesRepository.find({
+      where: {
+        active: '1',
+      },
+    });
+  }
+
+  async changeExerciseStatus(
+    exerciseId: number,
+    newStatus: string,
+  ): Promise<Exercises> {
+    const exercise = await this.exercisesRepository.findOne({
+      where: { id: exerciseId },
+    });
+    if (!exercise) {
+      throw new Error(`L'exercice avec l'ID ${exerciseId} n'existe pas.`);
+    }
+    exercise.active = newStatus;
+    console.log(newStatus);
+    return this.exercisesRepository.save(exercise);
   }
 }

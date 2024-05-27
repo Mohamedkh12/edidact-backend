@@ -29,6 +29,6 @@ export class AdminController {
   @Public()
   @Get('AllChildren')
   async findAllChild(): Promise<Children[]> {
-    return await this.adminService.findChildren();
+    return await this.adminService.findChildren()
   }
 }

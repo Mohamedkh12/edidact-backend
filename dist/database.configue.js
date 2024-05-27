@@ -17,7 +17,7 @@ exports.databaseConfig = {
     password: 'edidact_S3cret',
     database: 'edidact_db',
     entities: [user_entity_1.User, back_pack_entity_1.Back_pack, roles_entity_1.Roles, exercises_entity_1.Exercises, childs_entity_1.Children, Codes_entity_1.Codes, parents_entity_1.Parents],
-    synchronize: true,
+    synchronize: false,
 };
 const dataSource = new typeorm_1.DataSource(exports.databaseConfig);
 exports.default = dataSource;
