@@ -165,6 +165,7 @@ export class ExercisesService {
       return acc
     },{});
 
+    
     for (const key in result) {
       result[key] = Array.from(result[key]);
     }
