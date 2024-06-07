@@ -42,21 +42,7 @@ let AdminController = class AdminController {
     }
     findAllChild() {
         return __awaiter(this, void 0, void 0, function* () {
-            const children = yield this.adminService.findChildren();
-            console.log(children);
-            return children;
-        });
-    }
-    //@UseGuards(JwtAuthGuards, RolesGuard)
-    //@Roles('Admin')
-    showExercice() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.adminService.showExercice();
-        });
-    }
-    changeExerciseStatus(exerciseId, newStatus) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.adminService.changeExerciseStatus(exerciseId, newStatus);
+            return yield this.adminService.findChildren();
         });
     }
 };
@@ -84,22 +70,6 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "findAllChild", null);
-__decorate([
-    (0, public_decorator_1.Public)(),
-    (0, common_1.Get)('showExercice'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], AdminController.prototype, "showExercice", null);
-__decorate([
-    (0, public_decorator_1.Public)(),
-    (0, common_1.Patch)('changeExerciseStatus'),
-    __param(0, (0, common_1.Body)('exerciseId')),
-    __param(1, (0, common_1.Body)('newStatus')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
-    __metadata("design:returntype", Promise)
-], AdminController.prototype, "changeExerciseStatus", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)('admin'),
     __metadata("design:paramtypes", [admin_service_1.AdminService])
