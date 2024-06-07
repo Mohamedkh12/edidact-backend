@@ -184,7 +184,7 @@ export class ExercisesController {
     @Query('childId') childId: number
   ) {
     const res =this.exercisesService.getCategoriesByParentAndChild(idParent, childId);
-    console.log(res);
+    
     return res
   }
   
