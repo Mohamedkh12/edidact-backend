@@ -29,10 +29,12 @@ const typeorm_2 = require("typeorm");
 const parents_entity_1 = require("../parents/entities/parents.entity");
 const jwt_1 = require("@nestjs/jwt");
 const jwtConstants_1 = require("../auth/jwtConstants");
+const exercises_entity_1 = require("../exercises/entities/exercises.entity");
 let AdminService = class AdminService {
-    constructor(childRepository, parentsRepository, jwtService) {
+    constructor(childRepository, parentsRepository, exercisesRepository, jwtService) {
         this.childRepository = childRepository;
         this.parentsRepository = parentsRepository;
+        this.exercisesRepository = exercisesRepository;
         this.jwtService = jwtService;
     }
     createAdminToken(username, password) {
@@ -77,13 +79,37 @@ let AdminService = class AdminService {
             return yield this.parentsRepository.find();
         });
     }
+    showExercice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.exercisesRepository.find({
+                where: {
+                    active: '1',
+                },
+            });
+        });
+    }
+    changeExerciseStatus(exerciseId, newStatus) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const exercise = yield this.exercisesRepository.findOne({
+                where: { id: exerciseId },
+            });
+            if (!exercise) {
+                throw new Error(`L'exercice avec l'ID ${exerciseId} n'existe pas.`);
+            }
+            exercise.active = newStatus;
+            console.log(newStatus);
+            return this.exercisesRepository.save(exercise);
+        });
+    }
 };
 exports.AdminService = AdminService;
 exports.AdminService = AdminService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(childs_entity_1.Children)),
     __param(1, (0, typeorm_1.InjectRepository)(parents_entity_1.Parents)),
+    __param(2, (0, typeorm_1.InjectRepository)(exercises_entity_1.Exercises)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService])
 ], AdminService);

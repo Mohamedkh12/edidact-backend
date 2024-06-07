@@ -17,6 +17,8 @@ const roles_module_1 = require("../roles/roles.module");
 const childs_module_1 = require("../childs/childs.module");
 const passport_1 = require("@nestjs/passport");
 const jwt_1 = require("@nestjs/jwt");
+const exercises_module_1 = require("../exercises/exercises.module");
+const exercises_service_1 = require("../exercises/exercises.service");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
@@ -27,6 +29,7 @@ exports.AdminModule = AdminModule = __decorate([
             parents_module_1.ParentsModule,
             roles_module_1.RolesModule,
             childs_module_1.ChildsModule,
+            exercises_module_1.ExercisesModule,
             passport_1.PassportModule.register({ session: true }),
             jwt_1.JwtModule.register({
                 secret: 'SECRET-CODE142&of',
@@ -35,7 +38,7 @@ exports.AdminModule = AdminModule = __decorate([
             }),
         ],
         controllers: [admin_controller_1.AdminController],
-        providers: [admin_service_1.AdminService],
+        providers: [admin_service_1.AdminService, exercises_service_1.ExercisesService],
         exports: [admin_service_1.AdminService, typeorm_1.TypeOrmModule],
     })
 ], AdminModule);
