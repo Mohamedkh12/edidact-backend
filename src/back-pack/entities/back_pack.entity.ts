@@ -4,6 +4,7 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Unique,
@@ -29,4 +30,5 @@ export class Back_pack {
   @ManyToMany(() => Exercises, (exercise) => exercise.backpacks)
   @JoinTable()
   exercises: Exercises[];
+  
 }

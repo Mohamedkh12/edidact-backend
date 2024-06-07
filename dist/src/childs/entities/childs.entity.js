@@ -24,6 +24,7 @@ const user_entity_1 = require("../../users/entities/user.entity");
 const parents_entity_1 = require("../../parents/entities/parents.entity");
 const back_pack_entity_1 = require("../../back-pack/entities/back_pack.entity");
 const bcrypt = require("bcrypt");
+const exercises_played_entity_1 = require("../../exercises-played/entities/exercises-played.entity");
 let Children = class Children {
     hashPassword() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -70,6 +71,10 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Children.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => exercises_played_entity_1.ExercisesPlayed, (playedExercise) => playedExercise.children),
+    __metadata("design:type", Array)
+], Children.prototype, "exercisesPlayed", void 0);
 __decorate([
     (0, typeorm_1.BeforeInsert)(),
     __metadata("design:type", Function),

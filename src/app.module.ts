@@ -28,6 +28,7 @@ import { CheckUserIdMiddleware } from './auth/middleware/enregistreur.middleware
 import { MailModule } from './mail/mail.module';
 import { databaseConfig } from '../database.configue';
 import { AdminService } from './admin/admin.service';
+import { ExercisesPlayedModule } from './exercises-played/exercises-played.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AdminService } from './admin/admin.service';
     ChildsModule,
     PassportModule,
     MailModule,
+    ExercisesPlayedModule,
   ],
   controllers: [
     AppController,

@@ -1,16 +1,9 @@
-import {
-  BeforeInsert,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne, JoinColumn, BeforeInsert } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Parents } from '../../parents/entities/parents.entity';
 import { Back_pack } from '../../back-pack/entities/back_pack.entity';
 import * as bcrypt from 'bcrypt';
+import { ExercisesPlayed } from '../../exercises-played/entities/exercises-played.entity';
 
 @Entity('Children')
 export class Children {
@@ -43,6 +36,9 @@ export class Children {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @OneToMany(() => ExercisesPlayed, (playedExercise) => playedExercise.children)
+  exercisesPlayed: ExercisesPlayed[];
+  
   @BeforeInsert()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);

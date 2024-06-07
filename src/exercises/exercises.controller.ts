@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseFilePipeBuilder,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -55,15 +56,15 @@ export class ExercisesController {
     return this.exercisesService.createExercise(createExerciseDto);
   }
 
-  @UseGuards(JwtAuthGuards, RolesGuard)
-  @Roles('Admin')
+  //@UseGuards(JwtAuthGuards, RolesGuard)
+  //@Roles('Admin')
+  @Public()
   @Patch('updateExercise/:id')
-  @UseInterceptors(FileInterceptor('image'))
   async updateExercise(
     @Param('id') id: number,
     @Body() updateExerciseDto: CreateExerciseDto,
   ) {
-    return this.exercisesService.updateExercise(id, updateExerciseDto);
+    return await this.exercisesService.updateExercise(id, updateExerciseDto);
   }
 
   @UseGuards(JwtAuthGuards, RolesGuard)
@@ -74,7 +75,7 @@ export class ExercisesController {
   }
 
   @Public()
-  @Get('Categories')
+  @Get('findAllCategories')
   async findAllCategories(): Promise<{ categories: string[] }> {
     console.log('Inside findAllCategories method...');
     try {
@@ -139,7 +140,7 @@ export class ExercisesController {
   }
 
   @UseGuards(JwtAuthGuards, RolesGuard)
-  @Roles('Admin')
+  @Roles('Admin','Parent')
   @Get('SubCategories-by-categories')
   async getSubCategoryByCategory() {
     const categoriesByClass = await this.exercisesService.getSubCategoryByCategory();
@@ -147,7 +148,7 @@ export class ExercisesController {
   }
 
   @UseGuards(JwtAuthGuards, RolesGuard)
-  @Roles('Admin')
+  @Roles('Admin','Parent')
   @Get('SubCategories-by-exercice')
   async getExercisesBySubCategory(
     @Query("classParam") classParam: string,
@@ -157,18 +158,35 @@ export class ExercisesController {
     const exercises = await this.exercisesService.getExercisesBySubCategory(classParam, category, subCategory);
     return exercises;
   }
-  @Public()
+  @UseGuards(JwtAuthGuards, RolesGuard)
+  @Roles('Admin','Parent',"Child")
   @Get('showExercice')
-  async showExercice(): Promise<Exercises[]> {
-    return await this.showExercice();
+  async showExercice( @Query("classParam") classParam: string,
+                      @Query("category") category: string,
+                      @Query("subCategory") subCategory: string
+                     ): Promise<Exercises[]> {
+    return await this.exercisesService.getActiveExercisesBySubCategory(classParam,category,subCategory)
   }
 
   @Public()
   @Patch('changeExerciseStatus')
   async changeExerciseStatus(
-    @Body('exerciseId') exerciseId: number,
-    @Body('newStatus') newStatus: string,
+    @Query('exerciseId') exerciseId: number,
+    @Query('newStatus') newStatus: string,
   ): Promise<Exercises> {
-    return await this.changeExerciseStatus(exerciseId, newStatus);
+    return await this.exercisesService.changeExerciseStatus(exerciseId, newStatus);
   }
+  
+  @Public()
+  @Get('getCategoriesByParentAndChild')
+  async getCategoriesByParentAndChild(
+    @Query('idParent') idParent: number,
+    @Query('childId') childId: number
+  ) {
+    const res =this.exercisesService.getCategoriesByParentAndChild(idParent, childId);
+    console.log(res);
+    return res
+  }
+  
+
 }

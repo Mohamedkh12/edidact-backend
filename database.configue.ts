@@ -7,6 +7,8 @@ import { Codes } from './src/mail/PasswordRestCode/entite/Codes.entity';
 import { Children } from './src/childs/entities/childs.entity';
 import { Exercises } from './src/exercises/entities/exercises.entity';
 import { Parents } from './src/parents/entities/parents.entity';
+import { ExercisesPlayed } from './src/exercises-played/entities/exercises-played.entity';
+
 
 export const databaseConfig: DataSourceOptions = {
   type: 'postgres',
@@ -15,7 +17,7 @@ export const databaseConfig: DataSourceOptions = {
   username: 'edidact_user',
   password: 'edidact_S3cret',
   database: 'edidact_db',
-  entities: [User, Back_pack, Roles, Exercises, Children, Codes, Parents],
+  entities: [User, Back_pack, Roles, Exercises, Children, Codes, Parents, ExercisesPlayed],
   synchronize: false,
 };
 const dataSource = new DataSource(databaseConfig);

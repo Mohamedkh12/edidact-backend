@@ -9,6 +9,7 @@ const Codes_entity_1 = require("./src/mail/PasswordRestCode/entite/Codes.entity"
 const childs_entity_1 = require("./src/childs/entities/childs.entity");
 const exercises_entity_1 = require("./src/exercises/entities/exercises.entity");
 const parents_entity_1 = require("./src/parents/entities/parents.entity");
+const exercises_played_entity_1 = require("./src/exercises-played/entities/exercises-played.entity");
 exports.databaseConfig = {
     type: 'postgres',
     host: 'apidev.edidact.ch',
@@ -16,7 +17,7 @@ exports.databaseConfig = {
     username: 'edidact_user',
     password: 'edidact_S3cret',
     database: 'edidact_db',
-    entities: [user_entity_1.User, back_pack_entity_1.Back_pack, roles_entity_1.Roles, exercises_entity_1.Exercises, childs_entity_1.Children, Codes_entity_1.Codes, parents_entity_1.Parents],
+    entities: [user_entity_1.User, back_pack_entity_1.Back_pack, roles_entity_1.Roles, exercises_entity_1.Exercises, childs_entity_1.Children, Codes_entity_1.Codes, parents_entity_1.Parents, exercises_played_entity_1.ExercisesPlayed],
     synchronize: false,
 };
 const dataSource = new typeorm_1.DataSource(exports.databaseConfig);

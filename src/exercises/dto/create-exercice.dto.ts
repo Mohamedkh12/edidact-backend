@@ -3,14 +3,16 @@ import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateExerciseDto {
 
+  @IsNumber()
+  id:number;
   @IsNotEmpty()
   @IsString()
-  class: string;
+  classe: string;
 
   @IsNotEmpty()
   @IsString()
   category: string;
-  
+
   @IsNotEmpty()
   @IsString()
   sub_category: string;
@@ -26,21 +28,9 @@ export class CreateExerciseDto {
   @IsNotEmpty()
   @IsString()
   link: string;
-  
+
   @IsNotEmpty()
   @IsString()
   objective: string;
-  
-  @IsNotEmpty()
-  created_at: Date;
 
-  @IsNotEmpty()
-  updated_at: Date;
-
-  deleted_at: Date;
-  @IsNotEmpty()
-  @IsNumber()
-  ChildId: number;
 }
-
-export class UpdateExerciseDto extends PartialType(CreateExerciseDto) {}

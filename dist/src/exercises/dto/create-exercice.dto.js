@@ -9,17 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateExerciseDto = exports.CreateExerciseDto = void 0;
+exports.CreateExerciseDto = void 0;
 const class_validator_1 = require("class-validator");
-const mapped_types_1 = require("@nestjs/mapped-types");
 class CreateExerciseDto {
 }
 exports.CreateExerciseDto = CreateExerciseDto;
 __decorate([
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateExerciseDto.prototype, "id", void 0);
+__decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateExerciseDto.prototype, "class", void 0);
+], CreateExerciseDto.prototype, "classe", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
@@ -50,20 +53,4 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateExerciseDto.prototype, "objective", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", Date)
-], CreateExerciseDto.prototype, "created_at", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", Date)
-], CreateExerciseDto.prototype, "updated_at", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateExerciseDto.prototype, "ChildId", void 0);
-class UpdateExerciseDto extends (0, mapped_types_1.PartialType)(CreateExerciseDto) {
-}
-exports.UpdateExerciseDto = UpdateExerciseDto;
 //# sourceMappingURL=create-exercice.dto.js.map
